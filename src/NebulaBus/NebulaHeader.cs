@@ -8,7 +8,12 @@ namespace NebulaBus
         public const string RequestId = "x-request-id";
         public const string MessageId = "x-message-id";
         public const string Sender = "x-sender";
+        public const string Consumer = "x-consumer";
         public const string SendTimeStamp = "x-send-timestamp";
+        public const string Exception = "x-exception";
+        public const string MessageType = "x-message-type";
+        public const string Name = "x-name";
+        public const string Group = "x-group";
 
         private readonly Dictionary<string, string?> _dic;
 

@@ -1,6 +1,8 @@
 ﻿using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using System;
+using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace NebulaBus.Rabbitmq
@@ -39,6 +41,11 @@ namespace NebulaBus.Rabbitmq
                 consumer.ReceivedAsync += async (ch, ea) =>
                 {
                     var body = ea.Body.ToArray();
+                    var message = Encoding.UTF8.GetString(body);
+                    var header = new NebulaHeader();
+                    foreach (var item in ea.BasicProperties.Headers!)
+                        header.Add(item.Key, item.Value!.ToString());
+                    handler.Subscribe(message, header);
                     await channel.BasicAckAsync(ea.DeliveryTag, false);
                 };
             }
