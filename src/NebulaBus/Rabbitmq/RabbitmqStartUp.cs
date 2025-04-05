@@ -2,17 +2,16 @@
 using RabbitMQ.Client.Events;
 using System;
 using System.Text;
-using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace NebulaBus.Rabbitmq
 {
-    public class StartUp : IStartUp
+    public class RabbitmqStartUp : IStartUp
     {
         private readonly RabbitmqOptions _rabbitmqOptions;
         private readonly NebulaHandler[] _nebulaHandlers;
         private IConnection? _connection;
-        public StartUp(RabbitmqOptions rabbitmqOptions, NebulaHandler[] nebulaHandlers)
+        public RabbitmqStartUp(RabbitmqOptions rabbitmqOptions, NebulaHandler[] nebulaHandlers)
         {
             _rabbitmqOptions = rabbitmqOptions;
             _nebulaHandlers = nebulaHandlers;
@@ -45,7 +44,7 @@ namespace NebulaBus.Rabbitmq
                     var header = new NebulaHeader();
                     foreach (var item in ea.BasicProperties.Headers!)
                         header.Add(item.Key, item.Value!.ToString());
-                    handler.Subscribe(message, header);
+                    await handler.Subscribe(message, header);
                     await channel.BasicAckAsync(ea.DeliveryTag, false);
                 };
             }

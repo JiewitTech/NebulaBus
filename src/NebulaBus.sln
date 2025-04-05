@@ -1,9 +1,13 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.13.35919.96 d17.13
+VisualStudioVersion = 17.13.35919.96
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NebulaBus", "NebulaBus\NebulaBus.csproj", "{D67769B8-360A-47C7-BFF4-05AF469F6657}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Samples", "Samples", "{02EA681E-C7D8-13C7-8484-4AC65E1B71E8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WebApplicationSample", "WebApplicationSample\WebApplicationSample.csproj", "{4D0B24B5-74FC-4B41-9062-71F579BB0B63}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,9 +19,16 @@ Global
 		{D67769B8-360A-47C7-BFF4-05AF469F6657}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D67769B8-360A-47C7-BFF4-05AF469F6657}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D67769B8-360A-47C7-BFF4-05AF469F6657}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4D0B24B5-74FC-4B41-9062-71F579BB0B63}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4D0B24B5-74FC-4B41-9062-71F579BB0B63}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4D0B24B5-74FC-4B41-9062-71F579BB0B63}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4D0B24B5-74FC-4B41-9062-71F579BB0B63}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{4D0B24B5-74FC-4B41-9062-71F579BB0B63} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {855D751D-7811-4D9B-87C9-F628E17E3A56}
