@@ -2,6 +2,7 @@
 using Quartz;
 using Quartz.Impl;
 using System;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace NebulaBus.Scheduler
@@ -41,6 +42,7 @@ namespace NebulaBus.Scheduler
             {
                 var job = JobBuilder.Create<DelayMessageSendJob>()
                     .WithIdentity($"Schedule:{delayMessage.Key}")
+                    .UsingJobData("data", JsonSerializer.Serialize(delayMessage))
                     .Build();
 
                 if (delayMessage.Value.TriggerTime < DateTimeOffset.Now)

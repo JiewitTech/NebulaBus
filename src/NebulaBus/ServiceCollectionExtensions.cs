@@ -28,7 +28,7 @@ namespace Microsoft.Extensions.DependencyInjection
 
             services.Configure(setupAction);
 
-            if (string.IsNullOrEmpty(options.RedisConnectionString))
+            if (!string.IsNullOrEmpty(options.RedisConnectionString))
             {
                 var redisClient = new CSRedis.CSRedisClient(options.RedisConnectionString);
                 services.AddSingleton(redisClient);

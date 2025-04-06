@@ -28,11 +28,12 @@ builder.Services.AddNebulaBus(options =>
     });
 });
 builder.Services.AddNebulaBusHandler<TestHandler, TestMessage>();
+builder.Services.AddNebulaBusHandler<TestHandlerV2, TestMessage>();
 
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
+if (app.Environment.IsDevelopment() || environment == "Local")
 {
     app.UseSwagger();
     app.UseSwaggerUI();

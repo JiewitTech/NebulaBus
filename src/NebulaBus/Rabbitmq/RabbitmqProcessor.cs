@@ -61,51 +61,58 @@ namespace NebulaBus.Rabbitmq
                 await channel.QueueBindAsync(handler.Name, _rabbitmqOptions.ExchangeName, handler.Group, null);
                 _channels.Add(channel);
                 var consumer = new AsyncEventingBasicConsumer(channel);
+                await channel.BasicConsumeAsync(handler.Name, false, consumer, cancellationToken);
 
                 consumer.ReceivedAsync += async (ch, ea) =>
                 {
                     var body = ea.Body.ToArray();
                     var message = Encoding.UTF8.GetString(body);
                     var header = new NebulaHeader();
-                    foreach (var item in ea.BasicProperties.Headers!)
-                        header.Add(item.Key, item.Value!.ToString());
+                    if (ea.BasicProperties.Headers != null)
+                    {
+                        foreach (var item in ea.BasicProperties.Headers!)
+                            header.Add(item.Key, item.Value!.ToString());
+                    }
+
+                    int.TryParse(header[NebulaHeader.RetryCount], out var retryCount);
+
                     try
                     {
+                        if (retryCount > handler.MaxRetryCount) return;
+                        header[NebulaHeader.RetryCount] = (retryCount + 1).ToString();
+
                         await handler.Subscribe(message, header);
                     }
                     catch (Exception ex)
                     {
                         header[NebulaHeader.Exception] = ex.ToString();
-                        int.TryParse(header[NebulaHeader.RetryCount], out var retryCount);
-                        if (retryCount > handler.MaxRetryCount) return;
-                        header[NebulaHeader.RetryCount] = (retryCount + 1).ToString();
 
-                        //First Time to retry
-                        if (handler.RetryDelay.TotalSeconds <= 0 && retryCount == 0)
+                        //First Time to retry，if no delay then send directly
+                        if (handler.RetryDelay.TotalSeconds <= 0)
                         {
                             await Send(handler.Group, message, header);
                             return;
                         }
 
                         //Interval Retry
-                        await Send(DelayRoutingKey, message, header);
                     }
-                    await channel.BasicAckAsync(ea.DeliveryTag, false);
+                    finally
+                    {
+                        await channel.BasicAckAsync(ea.DeliveryTag, false);
+                    }
                 };
             }
         }
 
         public async Task Send(string group, string message, NebulaHeader header)
         {
-            byte[] messageBodyBytes = Encoding.UTF8.GetBytes("Hello, world!");
-            var props = new BasicProperties();
-            await _senderChannel.BasicPublishAsync(_rabbitmqOptions.ExchangeName, group, false, props, messageBodyBytes);
-        }
-
-        public async Task SendDelay(string group, string message, NebulaHeader header, TimeSpan delay)
-        {
-            byte[] messageBodyBytes = Encoding.UTF8.GetBytes("Hello, world!");
-            var props = new BasicProperties();
+            byte[] messageBodyBytes = Encoding.UTF8.GetBytes(message);
+            var props = new BasicProperties()
+            {
+                Headers = new Dictionary<string, object?>()
+            };
+            foreach (var item in header)
+                props.Headers!.Add(item.Key, item.Value);
             await _senderChannel.BasicPublishAsync(_rabbitmqOptions.ExchangeName, group, false, props, messageBodyBytes);
         }
     }

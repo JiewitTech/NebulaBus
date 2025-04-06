@@ -1,4 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
+using NebulaBus;
+using WebApplicationSample.Messages;
 
 namespace WebApplicationSample.Controllers
 {
@@ -12,15 +14,18 @@ namespace WebApplicationSample.Controllers
         };
 
         private readonly ILogger<WeatherForecastController> _logger;
+        private readonly INebulaBus _bus;
 
-        public WeatherForecastController(ILogger<WeatherForecastController> logger)
+        public WeatherForecastController(ILogger<WeatherForecastController> logger, INebulaBus nebulaBus)
         {
             _logger = logger;
+            _bus = nebulaBus;
         }
 
         [HttpGet(Name = "GetWeatherForecast")]
         public IEnumerable<WeatherForecast> Get()
         {
+            _bus.PublishAsync("NebulaBus.TestHandler", new TestMessage { Message = "Hello World" });
             return Enumerable.Range(1, 5).Select(index => new WeatherForecast
             {
                 Date = DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
