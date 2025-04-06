@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Hosting;
+using NebulaBus.Scheduler;
 using System;
 using System.Collections.Generic;
 using System.Threading;
@@ -11,10 +12,12 @@ namespace NebulaBus
         private readonly IEnumerable<IProcessor> _processors;
         private CancellationTokenSource? _cts;
         private bool _disposed;
+        private readonly IDelayMessageScheduler _delayMessageScheduler;
 
-        public Bootstrapper(IEnumerable<IProcessor> startUps)
+        public Bootstrapper(IEnumerable<IProcessor> startUps, IDelayMessageScheduler delayMessageScheduler)
         {
             _processors = startUps;
+            _delayMessageScheduler = delayMessageScheduler;
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -35,6 +38,9 @@ namespace NebulaBus
                 { }
             });
 
+            //Start Sender Scheduler
+            await _delayMessageScheduler.StartSenderScheduler();
+
             //Start all processors
             _disposed = false;
             foreach (var processor in _processors)
@@ -46,6 +52,9 @@ namespace NebulaBus
                 }
                 catch { }
             }
+
+            //Start Store Scheduler
+            await _delayMessageScheduler.StartStoreSchedule();
         }
 
         public override async Task StopAsync(CancellationToken cancellationToken)

@@ -1,8 +1,11 @@
 ﻿using Microsoft.Extensions.DependencyInjection.Extensions;
 using NebulaBus;
 using NebulaBus.Rabbitmq;
+using NebulaBus.Scheduler;
+using NebulaBus.Store;
+using NebulaBus.Store.Redis;
+using Quartz;
 using System;
-using System.Reflection;
 
 namespace Microsoft.Extensions.DependencyInjection
 {
@@ -17,10 +20,20 @@ namespace Microsoft.Extensions.DependencyInjection
             setupAction(options);
             services.AddSingleton(options);
             services.AddSingleton<INebulaBus, NebulaBusService>();
+            services.AddSingleton<IStore, RedisStore>();
+            services.AddSingleton<IDelayMessageScheduler, DelayMessageScheduler>();
+            services.AddScoped<IJob, DelayMessageSendJob>();
 
             services.TryAddEnumerable(ServiceDescriptor.Singleton<IProcessor, RabbitmqProcessor>());
 
             services.Configure(setupAction);
+
+            if (string.IsNullOrEmpty(options.RedisConnectionString))
+            {
+                var redisClient = new CSRedis.CSRedisClient(options.RedisConnectionString);
+                services.AddSingleton(redisClient);
+            }
+
             services.AddHostedService<Bootstrapper>();
         }
 

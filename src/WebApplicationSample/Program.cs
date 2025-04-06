@@ -18,6 +18,7 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddNebulaBus(options =>
 {
+    options.UseRedisStore(configuration!.GetConnectionString("RedisConn"));
     options.UseRabbitmq(rabbitmq =>
     {
         rabbitmq.HostName = configuration!.GetValue<string>("RabbitMq:HostName");

@@ -6,6 +6,7 @@ namespace NebulaBus
     public class NebulaOptions
     {
         internal RabbitmqOptions RabbitmqOptions { get; }
+        internal string RedisConnectionString { get; set; }
 
         public NebulaOptions()
         {
@@ -15,6 +16,11 @@ namespace NebulaBus
         public void UseRabbitmq(Action<RabbitmqOptions> optionsAction)
         {
             optionsAction(RabbitmqOptions);
+        }
+
+        public void UseRedisStore(string redisConnectionString)
+        {
+            RedisConnectionString = redisConnectionString;
         }
     }
 }
