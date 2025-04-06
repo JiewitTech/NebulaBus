@@ -5,15 +5,16 @@ namespace NebulaBus
 {
     public class NebulaHeader : IDictionary<string, string?>
     {
-        public const string RequestId = "x-request-id";
-        public const string MessageId = "x-message-id";
-        public const string Sender = "x-sender";
-        public const string Consumer = "x-consumer";
-        public const string SendTimeStamp = "x-send-timestamp";
-        public const string Exception = "x-exception";
-        public const string MessageType = "x-message-type";
-        public const string Name = "x-name";
-        public const string Group = "x-group";
+        public const string RequestId = "nb-request-id";
+        public const string MessageId = "nb-message-id";
+        public const string Sender = "nb-sender";
+        public const string Consumer = "nb-consumer";
+        public const string SendTimeStamp = "nb-send-timestamp";
+        public const string Exception = "nb-exception";
+        public const string MessageType = "nb-message-type";
+        public const string Name = "nb-name";
+        public const string Group = "nb-group";
+        public const string RetryCount = "nb-retry-count";
 
         private readonly Dictionary<string, string?> _dic;
 

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics.CodeAnalysis;
 using System.Text.Json;
 using System.Threading.Tasks;
 
@@ -22,15 +21,11 @@ namespace NebulaBus
         internal override async Task Subscribe(string message, NebulaHeader header)
         {
             if (string.IsNullOrEmpty(message)) return;
-            try
-            {
-                await Handle(JsonSerializer.Deserialize<T>(message), header);
-            }
-            catch (Exception ex)
-            {
-            }
+            var data = JsonSerializer.Deserialize<T>(message);
+            if (data == null) return;
+            await Handle(data, header);
         }
 
-        public abstract Task Handle([AllowNull] T message, NebulaHeader header);
+        public abstract Task Handle(T message, NebulaHeader header);
     }
 }

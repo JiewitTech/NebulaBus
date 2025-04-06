@@ -12,9 +12,9 @@ namespace NebulaBus
             RabbitmqOptions = new RabbitmqOptions();
         }
 
-        public void UseRabbitmq(Action<RabbitmqOptions> options)
+        public void UseRabbitmq(Action<RabbitmqOptions> optionsAction)
         {
-            options.Invoke(RabbitmqOptions);
+            optionsAction(RabbitmqOptions);
         }
     }
 }
