@@ -1,0 +1,63 @@
+name: Publish To NuGet
+
+on:
+  repository_dispatch:
+    types: [manual-trigger]
+  push:
+    branches: [release]
+    tags-ignore: ["**"]
+
+jobs:
+  build-and-publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # 获取完整 Git 历史
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: Install GitVersion
+        uses: gittools/actions/gitversion/setup@v3.2.0
+        with:
+          versionSpec: "6.2.x"
+
+      - name: Determine Version
+        id: version_step
+        uses: gittools/actions/gitversion/execute@v3.2.0
+
+      - run: |
+          echo "FullSemVer (env.fullSemVer)            : ${{ env.fullSemVer }}"
+        name: Display GitVersion variables (without prefix)
+
+      - run: |
+          echo "FullSemVer (env.GitVersion_FullSemVer) : ${{ env.GitVersion_FullSemVer }}"
+        name: Display GitVersion variables (with prefix)
+
+      - run: |
+          echo "FullSemVer (steps.version_step.outputs.fullSemVer)            : ${{ steps.version_step.outputs.fullSemVer }}"
+        name: Display GitVersion outputs (step output without prefix)
+
+      - run: |
+          echo "FullSemVer (steps.version_step.outputs.GitVersion_FullSemVer) : ${{ steps.version_step.outputs.GitVersion_FullSemVer }}"
+        name: Display GitVersion outputs (step output with prefix)
+
+      # - name: Build & Pack
+      #   run: |
+      #     dotnet restore
+      #     dotnet build --configuration Release --no-restore
+      #     dotnet pack src/NebulaBus.csproj  -p:PackageVersion=${{ env.VERSION }} --output nupkgs
+
+      # - name: Push to NuGet
+      #   run: dotnet nuget push "nupkgs/*.nupkg" --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json
+
+      # - name: Create Git Tag
+      #   run: |
+      #     git config --global user.name  "GitHub Actions"
+      #     git config --global user.email  "actions@github.com"
+      #     git tag ${{ env.TAG }} -m "Release ${{ env.TAG }}"
+      #     git push origin ${{ env.TAG }}
