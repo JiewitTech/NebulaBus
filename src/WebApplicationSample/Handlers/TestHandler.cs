@@ -10,7 +10,7 @@ namespace WebApplicationSample.Handlers
 
         public override async Task Handle(TestMessage message, NebulaHeader header)
         {
-            Console.WriteLine($"Received Message {Name}:{message.Message}");
+            Console.WriteLine($"{DateTime.Now} Received Message {Name}:{message.Message}");
         }
     }
 }
