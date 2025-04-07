@@ -21,6 +21,7 @@ namespace NebulaBus.Scheduler
 
         public void ReturnJob(IJob job)
         {
+            (job as IDisposable)?.Dispose();
         }
     }
 }
