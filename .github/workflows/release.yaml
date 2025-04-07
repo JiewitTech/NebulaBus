@@ -17,9 +17,9 @@ jobs:
           fetch-depth: 0 # 获取完整 Git 历史
 
       - name: Setup .NET
-        uses: actions/setup-dotnet@v3
+        uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: "8.0.14"
+          dotnet-version: "8.0.x"
 
       - name: Install GitVersion
         uses: gittools/actions/gitversion/setup@v3.2.0
