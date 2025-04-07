@@ -39,7 +39,7 @@ namespace NebulaBus
         public async Task PublishAsync<T>(TimeSpan delay, string group, T message)
         {
             var header = BuildNebulaHeader<T>(group);
-            await _delayMessageScheduler.StartSchedule(new DelayStoreMessage()
+            await _delayMessageScheduler.Schedule(new DelayStoreMessage()
             {
                 MessageId = header[NebulaHeader.MessageId]!,
                 Group = group,
@@ -53,7 +53,7 @@ namespace NebulaBus
         public async Task PublishAsync<T>(TimeSpan delay, string group, T message, IDictionary<string, string?> headers)
         {
             var header = BuildNebulaHeader<T>(group, headers);
-            await _delayMessageScheduler.StartSchedule(new DelayStoreMessage()
+            await _delayMessageScheduler.Schedule(new DelayStoreMessage()
             {
                 MessageId = header[NebulaHeader.MessageId]!,
                 Group = group,

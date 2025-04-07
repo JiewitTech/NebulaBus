@@ -22,7 +22,7 @@ namespace WebApplicationSample.Controllers
             _bus = nebulaBus;
         }
 
-        [HttpGet(Name = "GetWeatherForecast")]
+        [HttpGet("GetWeatherForecast")]
         public IEnumerable<WeatherForecast> Publish()
         {
             _bus.PublishAsync("NebulaBus.TestHandler", new TestMessage { Message = "Hello World" });
@@ -35,7 +35,7 @@ namespace WebApplicationSample.Controllers
                 .ToArray();
         }
 
-        [HttpGet(Name = "GetWeatherForecastDelay")]
+        [HttpGet("GetWeatherForecastDelay")]
         public IEnumerable<WeatherForecast> DelayPublish()
         {
             _bus.PublishAsync(TimeSpan.FromSeconds(5), "NebulaBus.TestHandler",

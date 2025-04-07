@@ -7,6 +7,6 @@ namespace NebulaBus.Scheduler
     {
         Task StartStoreSchedule();
         Task StartSenderScheduler();
-        Task StartSchedule(DelayStoreMessage delayStoreMessage);
+        Task Schedule(DelayStoreMessage delayStoreMessage);
     }
 }

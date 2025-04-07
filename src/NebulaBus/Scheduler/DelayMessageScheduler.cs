@@ -2,8 +2,8 @@
 using Quartz;
 using Quartz.Impl;
 using System;
-using System.Text.Json;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
 
 namespace NebulaBus.Scheduler
 {
@@ -17,10 +17,11 @@ namespace NebulaBus.Scheduler
             _store = store;
         }
 
-        public async Task StartSchedule(DelayStoreMessage delayMessage)
+        public async Task Schedule(DelayStoreMessage delayMessage)
         {
             var job = JobBuilder.Create<DelayMessageSendJob>()
                 .WithIdentity($"Schedule:{delayMessage.MessageId}")
+                .UsingJobData("data", JsonConvert.SerializeObject(delayMessage))
                 .Build();
 
             var trigger = TriggerBuilder.Create()
@@ -42,7 +43,7 @@ namespace NebulaBus.Scheduler
             {
                 var job = JobBuilder.Create<DelayMessageSendJob>()
                     .WithIdentity($"Schedule:{delayMessage.Key}")
-                    .UsingJobData("data", JsonSerializer.Serialize(delayMessage))
+                    .UsingJobData("data", JsonConvert.SerializeObject(delayMessage))
                     .Build();
 
                 if (delayMessage.Value.TriggerTime < DateTimeOffset.Now)
