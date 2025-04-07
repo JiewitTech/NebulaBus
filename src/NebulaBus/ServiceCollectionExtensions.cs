@@ -6,6 +6,7 @@ using NebulaBus.Store;
 using NebulaBus.Store.Redis;
 using Quartz;
 using System;
+using NebulaBus.Store.Memory;
 
 namespace Microsoft.Extensions.DependencyInjection
 {
@@ -28,10 +29,15 @@ namespace Microsoft.Extensions.DependencyInjection
 
             services.Configure(setupAction);
 
+            //Delay Message Store
             if (!string.IsNullOrEmpty(options.RedisConnectionString))
             {
                 var redisClient = new CSRedis.CSRedisClient(options.RedisConnectionString);
                 services.AddSingleton(redisClient);
+            }
+            else
+            {
+                services.AddSingleton<IStore, MemoryStore>();
             }
 
             services.AddHostedService<Bootstrapper>();
