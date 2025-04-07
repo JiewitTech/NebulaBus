@@ -34,8 +34,9 @@ namespace NebulaBus.Scheduler
                 foreach (var processor in _processors)
                 {
                     await processor.Send(messageData.Group, messageData.Message, messageData.Header);
-                    await _store.Delete(messageData.MessageId);
                 }
+
+                await _store.Delete(messageData.MessageId);
             }
             catch (Exception e)
             {

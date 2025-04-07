@@ -12,6 +12,7 @@ namespace NebulaBus.Scheduler
         private readonly IStore _store;
         private IScheduler _senderScheduler;
         private IScheduler _scheduler;
+
         public DelayMessageScheduler(IStore store)
         {
             _store = store;
@@ -19,6 +20,10 @@ namespace NebulaBus.Scheduler
 
         public async Task Schedule(DelayStoreMessage delayMessage)
         {
+            if (string.IsNullOrEmpty(delayMessage.MessageId))
+            {
+                return;
+            }
             var job = JobBuilder.Create<DelayMessageSendJob>()
                 .WithIdentity($"Schedule:{delayMessage.MessageId}")
                 .UsingJobData("data", JsonConvert.SerializeObject(delayMessage))
@@ -29,6 +34,7 @@ namespace NebulaBus.Scheduler
                 .StartAt(delayMessage.TriggerTime)
                 .Build();
 
+            await _store.Add(delayMessage);
             await _senderScheduler.ScheduleJob(job, trigger);
         }
 
