@@ -39,7 +39,7 @@ namespace WebApplicationSample.Controllers
         public IEnumerable<WeatherForecast> DelayPublish()
         {
             Console.WriteLine($"{DateTime.Now} Start send delay message");
-            _bus.PublishAsync(TimeSpan.FromSeconds(5), "NebulaBus.TestHandler",
+            _bus.PublishAsync(TimeSpan.FromMinutes(1), "NebulaBus.TestHandler",
                 new TestMessage { Message = "Hello World" });
             return Enumerable.Range(1, 5).Select(index => new WeatherForecast
                 {
