@@ -7,6 +7,8 @@ using NebulaBus.Store.Redis;
 using Quartz;
 using System;
 using NebulaBus.Store.Memory;
+using Quartz.Simpl;
+using Quartz.Spi;
 
 namespace Microsoft.Extensions.DependencyInjection
 {
@@ -23,7 +25,10 @@ namespace Microsoft.Extensions.DependencyInjection
             services.AddSingleton<INebulaBus, NebulaBusService>();
             services.AddSingleton<IStore, RedisStore>();
             services.AddSingleton<IDelayMessageScheduler, DelayMessageScheduler>();
-            services.AddScoped<IJob, DelayMessageSendJob>();
+
+            //Schedule job
+            services.AddKeyedSingleton<IJobFactory, NebulaBusJobFactory>("NebulaBusJobFactory");
+            services.AddKeyedScoped<IJob, DelayMessageSendJob>("NebulaBusDelayMessageSendJob");
 
             services.TryAddEnumerable(ServiceDescriptor.Singleton<IProcessor, RabbitmqProcessor>());
 
