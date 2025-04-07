@@ -10,10 +10,5 @@ namespace NebulaBus
         Task PublishAsync<T>(string name, T message, IDictionary<string, string> headers);
         Task PublishAsync<T>(TimeSpan delay, string name, T message);
         Task PublishAsync<T>(TimeSpan delay, string name, T message, IDictionary<string, string> headers);
-
-        Task<Response> PublishAsync<Request, Response>(string name, Request message);
-        Task<Response> PublishAsync<Request, Response>(string name, Request message, IDictionary<string, string> headers);
-        Task<Response> PublishAsync<Request, Response>(TimeSpan delay, string name, Request message);
-        Task<Response> PublishAsync<Request, Response>(TimeSpan delay, string name, Request message, IDictionary<string, string> headers);
     }
 }

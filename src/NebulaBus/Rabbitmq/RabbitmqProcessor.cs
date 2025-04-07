@@ -17,8 +17,7 @@ namespace NebulaBus.Rabbitmq
         private IConnection? _connection;
         private readonly List<IChannel> _channels;
         private IChannel _senderChannel;
-        internal const string DelayQueue = "NebulaBus.DelayQueue";
-        internal const string DelayRoutingKey = "NebulaBus.DelayRoutingKey";
+
         public RabbitmqProcessor(NebulaOptions nebulaOptions, IEnumerable<NebulaHandler> nebulaHandlers)
         {
             _rabbitmqOptions = nebulaOptions.RabbitmqOptions;
@@ -33,6 +32,7 @@ namespace NebulaBus.Rabbitmq
                 channel.CloseAsync().Wait();
                 channel.Dispose();
             }
+
             _connection?.CloseAsync().Wait();
             _connection?.Dispose();
         }
@@ -113,7 +113,9 @@ namespace NebulaBus.Rabbitmq
             };
             foreach (var item in header)
                 props.Headers!.Add(item.Key, item.Value);
-            await _senderChannel.BasicPublishAsync(_rabbitmqOptions.ExchangeName, group, false, props, messageBodyBytes);
+
+            await _senderChannel.BasicPublishAsync(_rabbitmqOptions.ExchangeName, group, false, props,
+                messageBodyBytes);
         }
     }
 }

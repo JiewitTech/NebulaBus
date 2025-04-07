@@ -20,6 +20,7 @@ namespace NebulaBus
     {
         internal override async Task Subscribe(string message, NebulaHeader header)
         {
+            header[NebulaHeader.Consumer] = Environment.MachineName;
             if (string.IsNullOrEmpty(message)) return;
             var data = JsonSerializer.Deserialize<T>(message);
             if (data == null) return;

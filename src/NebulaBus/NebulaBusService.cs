@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Text.Json;
 using System.Threading.Tasks;
+using NebulaBus.Store;
 
 namespace NebulaBus
 {
@@ -10,6 +11,7 @@ namespace NebulaBus
     {
         private readonly IEnumerable<IProcessor> _processors;
         private readonly IDelayMessageScheduler _delayMessageScheduler;
+
         public NebulaBusService(IEnumerable<IProcessor> processors, IDelayMessageScheduler delayMessageScheduler)
         {
             _processors = processors;
@@ -18,45 +20,77 @@ namespace NebulaBus
 
         public async Task PublishAsync<T>(string group, T message)
         {
+            var header = BuildNebulaHeader<T>(group);
             foreach (var processor in _processors)
             {
-                await processor.Send(group, JsonSerializer.Serialize(message), new NebulaHeader());
+                await processor.Send(group, JsonSerializer.Serialize(message), header);
             }
         }
 
-        public Task PublishAsync<T>(string group, T message, IDictionary<string, string> headers)
+        public async Task PublishAsync<T>(string group, T message, IDictionary<string, string?> headers)
         {
-            throw new NotImplementedException();
+            var header = BuildNebulaHeader<T>(group, headers);
+            foreach (var processor in _processors)
+            {
+                await processor.Send(group, JsonSerializer.Serialize(message), header);
+            }
         }
 
-        public Task PublishAsync<T>(TimeSpan delay, string group, T message)
+        public async Task PublishAsync<T>(TimeSpan delay, string group, T message)
         {
-            throw new NotImplementedException();
+            var header = BuildNebulaHeader<T>(group);
+            await _delayMessageScheduler.StartSchedule(new DelayStoreMessage()
+            {
+                MessageId = header[NebulaHeader.MessageId]!,
+                Group = group,
+                Header = header,
+                Message = JsonSerializer.Serialize(message),
+                Name = "",
+                TriggerTime = DateTimeOffset.Now.AddSeconds(delay.TotalSeconds)
+            });
         }
 
-        public Task PublishAsync<T>(TimeSpan delay, string group, T message, IDictionary<string, string> headers)
+        public async Task PublishAsync<T>(TimeSpan delay, string group, T message, IDictionary<string, string?> headers)
         {
-            throw new NotImplementedException();
+            var header = BuildNebulaHeader<T>(group, headers);
+            await _delayMessageScheduler.StartSchedule(new DelayStoreMessage()
+            {
+                MessageId = header[NebulaHeader.MessageId]!,
+                Group = group,
+                Header = header,
+                Message = JsonSerializer.Serialize(message),
+                Name = "",
+                TriggerTime = DateTimeOffset.Now.AddSeconds(delay.TotalSeconds)
+            });
         }
 
-        public Task<Response> PublishAsync<Request, Response>(string group, Request message)
+        private static NebulaHeader BuildNebulaHeader<T>(string group)
         {
-            throw new NotImplementedException();
+            var newId = Guid.NewGuid().ToString();
+            var header = new NebulaHeader()
+            {
+                { NebulaHeader.MessageType, typeof(T).ToString() },
+                { NebulaHeader.Group, group },
+                { NebulaHeader.Sender, Environment.MachineName },
+                { NebulaHeader.SendTimeStamp, DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString() },
+                { NebulaHeader.MessageId, newId },
+                { NebulaHeader.RequestId, newId },
+            };
+            return header;
         }
 
-        public Task<Response> PublishAsync<Request, Response>(string group, Request message, IDictionary<string, string> headers)
+        private static NebulaHeader BuildNebulaHeader<T>(string group, IDictionary<string, string?> headers)
         {
-            throw new NotImplementedException();
-        }
-
-        public Task<Response> PublishAsync<Request, Response>(TimeSpan delay, string group, Request message)
-        {
-            throw new NotImplementedException();
-        }
-
-        public Task<Response> PublishAsync<Request, Response>(TimeSpan delay, string group, Request message, IDictionary<string, string> headers)
-        {
-            throw new NotImplementedException();
+            var newId = Guid.NewGuid().ToString();
+            var header = new NebulaHeader(headers);
+            header[NebulaHeader.MessageType] = typeof(T).ToString();
+            header[NebulaHeader.Group] = group;
+            header[NebulaHeader.Sender] = Environment.MachineName;
+            header[NebulaHeader.SendTimeStamp] = DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString();
+            header[NebulaHeader.MessageId] = newId;
+            if (string.IsNullOrEmpty(header[NebulaHeader.RequestId]))
+                header[NebulaHeader.RequestId] = newId;
+            return header;
         }
     }
 }

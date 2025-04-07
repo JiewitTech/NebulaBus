@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace NebulaBus
 {
@@ -21,6 +22,11 @@ namespace NebulaBus
         public NebulaHeader()
         {
             _dic = new Dictionary<string, string?>();
+        }
+
+        public NebulaHeader(IDictionary<string, string?> dic)
+        {
+            _dic = dic.ToDictionary(x => x.Key, x => x.Value);
         }
 
         public string? this[string key]
@@ -81,6 +87,7 @@ namespace NebulaBus
                 _dic.Remove(key);
                 return true;
             }
+
             return false;
         }
 
