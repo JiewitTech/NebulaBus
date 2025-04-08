@@ -31,52 +31,19 @@ jobs:
           version_format: "${major}.${minor}.${patch}.${increment}"
           change_path: "src/NebulaBus"
 
-      # - name: Install GitVersion
-      #   uses: gittools/actions/gitversion/setup@v3.2.0
-      #   with:
-      #     versionSpec: "6.2.x"
-
-      # - name: Determine Version
-      #   id: gitversion
-      #   uses: gittools/actions/gitversion/execute@v3.2.0
-      #   with:
-      #     updateAssemblyInfo: true
-      #     useConfigFile: true
-      #     configFilePath: src/GitVersion.yaml
-          
-      - run: |
-          echo "FullSemVer (env.fullSemVer)            : ${{ steps.gitversion.outputs }}"
-        name: Display GitVersion variables (without prefix)
-
-      # - run: |
-      #     echo "FullSemVer (env.GitVersion_FullSemVer) : ${{ env.GitVersion_FullSemVer }}"
-      #   name: Display GitVersion variables (with prefix)
-
-      # - run: |
-      #     echo "FullSemVer (steps.gitversion.outputs.fullSemVer)            : ${{ steps.gitversion.outputs.fullSemVer }}"
-      #   name: Display GitVersion outputs (step output without prefix)
-
-      # - run: |
-      #     echo "FullSemVer (steps.gitversion.outputs.GitVersion_FullSemVer) : ${{ steps.gitversion.outputs.GitVersion_FullSemVer }}"
-      #   name: Display GitVersion outputs (step output with prefix)
-
       - name: Build & Pack
         working-directory: src/NebulaBus
         run: |
           dotnet restore
           dotnet build --configuration Release --no-restore
-          dotnet pack NebulaBus.csproj  -p:PackageVersion=${{ steps.gitversion.outputs.version }} --output nupkgs
+          dotnet pack NebulaBus.csproj /p:FileVersion=${{ steps.gitversion.outputs.version }} /p:Version=${{ steps.gitversion.outputs.version }}  -p:PackageVersion=${{ steps.gitversion.outputs.version }} --output nupkgs
 
-      - name: Show Package
+      - name: Push to NuGet
+        run: dotnet nuget push "nupkgs/*.nupkg" --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json
+
+      - name: Create Git Tag
         run: |
-          cd nupkgs
-          ls -l
-      # - name: Push to NuGet
-      #   run: dotnet nuget push "nupkgs/*.nupkg" --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json
-
-      # - name: Create Git Tag
-      #   run: |
-      #     git config --global user.name  "GitHub Actions"
-      #     git config --global user.email  "actions@github.com"
-      #     git tag ${{ env.TAG }} -m "Release ${{ env.TAG }}"
-      #     git push origin ${{ env.TAG }}
+          git config --global user.name  "GitHub Actions"
+          git config --global user.email  "actions@github.com"
+          git tag ${{ steps.gitversion.outputs.version_tag }} -m "Release ${{ steps.gitversion.outputs.version_tag }}"
+          git push origin ${{ steps.gitversion.outputs.version_tag }}
