@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace NebulaBus
 {
-    public class NebulaHeader : IDictionary<string, string?>
+    public class NebulaHeader : IDictionary<string, string>
     {
         public const string RequestId = "nb-request-id";
         public const string MessageId = "nb-message-id";
@@ -17,33 +17,33 @@ namespace NebulaBus
         public const string Group = "nb-group";
         public const string RetryCount = "nb-retry-count";
 
-        private readonly Dictionary<string, string?> _dic;
+        private readonly Dictionary<string, string> _dic;
 
         public NebulaHeader()
         {
-            _dic = new Dictionary<string, string?>();
+            _dic = new Dictionary<string, string>();
         }
 
-        public NebulaHeader(IDictionary<string, string?> dic)
+        public NebulaHeader(IDictionary<string, string> dic)
         {
             _dic = dic.ToDictionary(x => x.Key, x => x.Value);
         }
 
-        public string? this[string key]
+        public string this[string key]
         {
-            get => _dic.ContainsKey(key) ? _dic[key] : null;
+            get => _dic.ContainsKey(key) ? _dic[key] : "";
             set => this.Add(key, value);
         }
 
         public ICollection<string> Keys => _dic.Keys;
 
-        public ICollection<string?> Values => _dic.Values;
+        public ICollection<string> Values => _dic.Values;
 
         public int Count => _dic.Count;
 
         public bool IsReadOnly => true;
 
-        public void Add(string key, string? value)
+        public void Add(string key, string value)
         {
             if (_dic.ContainsKey(key))
                 _dic[key] = value;
@@ -51,7 +51,7 @@ namespace NebulaBus
                 _dic.Add(key, value);
         }
 
-        public void Add(KeyValuePair<string, string?> item)
+        public void Add(KeyValuePair<string, string> item)
         {
             Add(item.Key, item.Value);
         }
@@ -61,7 +61,7 @@ namespace NebulaBus
             _dic.Clear();
         }
 
-        public bool Contains(KeyValuePair<string, string?> item)
+        public bool Contains(KeyValuePair<string, string> item)
         {
             return _dic.ContainsKey(item.Key) && _dic[item.Key] == item.Value;
         }
@@ -71,11 +71,11 @@ namespace NebulaBus
             return _dic.ContainsKey(key);
         }
 
-        public void CopyTo(KeyValuePair<string, string?>[] array, int arrayIndex)
+        public void CopyTo(KeyValuePair<string, string>[] array, int arrayIndex)
         {
         }
 
-        public IEnumerator<KeyValuePair<string, string?>> GetEnumerator()
+        public IEnumerator<KeyValuePair<string, string>> GetEnumerator()
         {
             return _dic.GetEnumerator();
         }
@@ -91,12 +91,12 @@ namespace NebulaBus
             return false;
         }
 
-        public bool Remove(KeyValuePair<string, string?> item)
+        public bool Remove(KeyValuePair<string, string> item)
         {
             return Remove(item.Key);
         }
 
-        public bool TryGetValue(string key, out string? value)
+        public bool TryGetValue(string key, out string value)
         {
             return _dic.TryGetValue(key, out value);
         }
