@@ -32,7 +32,7 @@ jobs:
         with:
           updateAssemblyInfo: true
           useConfigFile: true
-          configFilePath: src/GitVersion.yml
+          configFilePath: src/GitVersion.yaml
 
       - run: |
           echo "FullSemVer (env.fullSemVer)            : ${{ env.fullSemVer }}"
