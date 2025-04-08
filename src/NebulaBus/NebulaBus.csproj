@@ -3,6 +3,9 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.1</TargetFramework>
     <Nullable>enable</Nullable>
+    <VersionPrefix>$(GitVersion_MajorMinorPatch)</VersionPrefix>
+    <VersionSuffix>$(GitVersion_PreReleaseTag)</VersionSuffix>
+    <PackageVersion>$(GitVersion_SemVer.Replace('+', '-'))</PackageVersion>
   </PropertyGroup>
 
   <ItemGroup>

@@ -27,8 +27,12 @@ jobs:
           versionSpec: "6.2.x"
 
       - name: Determine Version
-        id: version_step
+        id: gitversion
         uses: gittools/actions/gitversion/execute@v3.2.0
+        with:
+          updateAssemblyInfo: true
+          useConfigFile: true
+          configFilePath: src/GitVersion.yml
 
       - run: |
           echo "FullSemVer (env.fullSemVer)            : ${{ env.fullSemVer }}"
@@ -39,11 +43,11 @@ jobs:
         name: Display GitVersion variables (with prefix)
 
       - run: |
-          echo "FullSemVer (steps.version_step.outputs.fullSemVer)            : ${{ steps.version_step.outputs.fullSemVer }}"
+          echo "FullSemVer (steps.gitversion.outputs.fullSemVer)            : ${{ steps.gitversion.outputs.fullSemVer }}"
         name: Display GitVersion outputs (step output without prefix)
 
       - run: |
-          echo "FullSemVer (steps.version_step.outputs.GitVersion_FullSemVer) : ${{ steps.version_step.outputs.GitVersion_FullSemVer }}"
+          echo "FullSemVer (steps.gitversion.outputs.GitVersion_FullSemVer) : ${{ steps.gitversion.outputs.GitVersion_FullSemVer }}"
         name: Display GitVersion outputs (step output with prefix)
 
       # - name: Build & Pack
