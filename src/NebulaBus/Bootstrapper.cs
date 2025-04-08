@@ -38,9 +38,6 @@ namespace NebulaBus
                 { }
             });
 
-            //Start Sender Scheduler
-            await _delayMessageScheduler.StartSenderScheduler();
-
             //Start all processors
             _disposed = false;
             foreach (var processor in _processors)
@@ -54,7 +51,7 @@ namespace NebulaBus
             }
 
             //Start Store Scheduler
-            await _delayMessageScheduler.StartStoreSchedule(_cts.Token);
+            await _delayMessageScheduler.StartSchedule(_cts.Token);
         }
 
         public override async Task StopAsync(CancellationToken cancellationToken)

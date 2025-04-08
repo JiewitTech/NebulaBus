@@ -6,8 +6,7 @@ namespace NebulaBus.Scheduler
 {
     internal interface IDelayMessageScheduler
     {
-        Task StartStoreSchedule(CancellationToken cancellationToken);
-        Task StartSenderScheduler();
+        Task StartSchedule(CancellationToken cancellationToken);
         Task Schedule(DelayStoreMessage delayStoreMessage);
     }
 }
