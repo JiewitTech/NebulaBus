@@ -33,7 +33,7 @@ jobs:
           updateAssemblyInfo: true
           useConfigFile: true
           configFilePath: src/GitVersion.yaml
-
+          
       - run: |
           echo "FullSemVer (env.fullSemVer)            : ${{ env.fullSemVer }}"
         name: Display GitVersion variables (without prefix)
@@ -50,12 +50,16 @@ jobs:
           echo "FullSemVer (steps.gitversion.outputs.GitVersion_FullSemVer) : ${{ steps.gitversion.outputs.GitVersion_FullSemVer }}"
         name: Display GitVersion outputs (step output with prefix)
 
-      # - name: Build & Pack
-      #   run: |
-      #     dotnet restore
-      #     dotnet build --configuration Release --no-restore
-      #     dotnet pack src/NebulaBus.csproj  -p:PackageVersion=${{ env.VERSION }} --output nupkgs
+      - name: Build & Pack
+        run: |
+          dotnet restore
+          dotnet build --configuration Release --no-restore
+          dotnet pack src/NebulaBus.csproj  -p:PackageVersion=${{ steps.gitversion.outputs.GitVersion_FullSemVer }} --output nupkgs
 
+      - name: Show Package
+        run: |
+          cd nupkgs
+          ls -l
       # - name: Push to NuGet
       #   run: dotnet nuget push "nupkgs/*.nupkg" --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json
 
