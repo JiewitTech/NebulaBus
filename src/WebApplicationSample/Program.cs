@@ -3,6 +3,7 @@ using WebApplicationSample.Handlers;
 using WebApplicationSample.Messages;
 
 var builder = WebApplication.CreateBuilder(args);
+builder.WebHost.UseUrls("http://*:0");
 var environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
 
 builder.Configuration.SetBasePath(Directory.GetCurrentDirectory())

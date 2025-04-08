@@ -54,7 +54,7 @@ namespace NebulaBus
             }
 
             //Start Store Scheduler
-            await _delayMessageScheduler.StartStoreSchedule();
+            await _delayMessageScheduler.StartStoreSchedule(_cts.Token);
         }
 
         public override async Task StopAsync(CancellationToken cancellationToken)

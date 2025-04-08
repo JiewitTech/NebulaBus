@@ -2,6 +2,7 @@
 using Quartz;
 using Quartz.Impl;
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
@@ -40,33 +41,49 @@ namespace NebulaBus.Scheduler
             await _senderScheduler.ScheduleJob(job, trigger);
         }
 
-        public async Task StartStoreSchedule()
+        public async Task StartStoreSchedule(CancellationToken cancellationToken)
         {
             StdSchedulerFactory factory = new StdSchedulerFactory();
             _scheduler = await factory.GetScheduler();
             _scheduler.JobFactory = _jobFactory;
             await _scheduler.Start();
 
-            var delayMessages = await _store.GetAll();
-            foreach (var delayMessage in delayMessages)
+            while (true)
             {
-                var job = BuildJobDetail(delayMessage.Value);
-
-                if (delayMessage.Value.TriggerTime < DateTimeOffset.Now)
+                if (cancellationToken.IsCancellationRequested)
+                    return;
+                
+                //lock
+                var gotLock = _store.Lock();
+                if (!gotLock)
                 {
-                    var rightNowTrigger = TriggerBuilder.Create()
-                        .WithIdentity($"Delay:{delayMessage.Key}")
-                        .StartNow()
-                        .Build();
-                    await _scheduler.ScheduleJob(job, rightNowTrigger);
+                    await Task.Delay(1000);
                     continue;
                 }
 
-                var trigger = TriggerBuilder.Create()
-                    .WithIdentity($"Delay:{delayMessage.Key}")
-                    .StartAt(delayMessage.Value.TriggerTime)
-                    .Build();
-                await _scheduler.ScheduleJob(job, trigger);
+                var delayMessages = await _store.GetAll();
+                foreach (var delayMessage in delayMessages)
+                {
+                    var job = BuildJobDetail(delayMessage.Value);
+
+                    if (delayMessage.Value.TriggerTime < DateTimeOffset.Now)
+                    {
+                        var rightNowTrigger = TriggerBuilder.Create()
+                            .WithIdentity($"Delay:{delayMessage.Key}")
+                            .StartNow()
+                            .Build();
+                        await _scheduler.ScheduleJob(job, rightNowTrigger);
+                        continue;
+                    }
+
+                    var trigger = TriggerBuilder.Create()
+                        .WithIdentity($"Delay:{delayMessage.Key}")
+                        .StartAt(delayMessage.Value.TriggerTime)
+                        .Build();
+                    await _scheduler.ScheduleJob(job, trigger);
+                }
+
+                await Task.Delay(1000);
             }
         }
 

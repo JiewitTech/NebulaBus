@@ -35,11 +35,14 @@ namespace NebulaBus.Store.Redis
 
         public async Task<Dictionary<string, DelayStoreMessage>> GetAll()
         {
-            using var redisLock = _redisClient.Lock($"{RedisLockKey}.Delete", 10);
-            if (redisLock == null)
-                throw new Exception("got redis lock failed");
             var result = await _redisClient.HGetAllAsync<DelayStoreMessage>(RedisKey);
             return result;
+        }
+
+        public bool Lock()
+        {
+           var redisLock= _redisClient.Lock($"{RedisLockKey}.Lock", 1, true);
+           return redisLock != null;
         }
     }
 }
