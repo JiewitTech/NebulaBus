@@ -8,5 +8,6 @@ namespace NebulaBus.Store
         Task Add(DelayStoreMessage delayStoreMessage);
         Task Delete(string messageId);
         Task<Dictionary<string, DelayStoreMessage>> GetAll();
+        bool Lock();
     }
 }

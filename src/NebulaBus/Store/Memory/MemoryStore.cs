@@ -31,5 +31,10 @@ namespace NebulaBus.Store.Memory
         {
             return await Task.FromResult(_storeMessages.ToDictionary(x => x.Key, x => x.Value));
         }
+
+        public bool Lock()
+        {
+            return true;
+        }
     }
 }
