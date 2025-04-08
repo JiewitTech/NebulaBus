@@ -1,6 +1,7 @@
 ﻿using NebulaBus.Scheduler;
 using NebulaBus.Store;
 using Newtonsoft.Json;
+using Snowflake.Core;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -11,11 +12,15 @@ namespace NebulaBus
     {
         private readonly IEnumerable<IProcessor> _processors;
         private readonly IDelayMessageScheduler _delayMessageScheduler;
+        private readonly IdWorker _idWorker;
 
         public NebulaBusService(IEnumerable<IProcessor> processors, IDelayMessageScheduler delayMessageScheduler)
         {
             _processors = processors;
             _delayMessageScheduler = delayMessageScheduler;
+            if (!long.TryParse(Environment.GetEnvironmentVariable("NEBULABUS_WORKERID"), out var result))
+                result = 1;
+            _idWorker = new IdWorker(result, 1);
         }
 
         public async Task PublishAsync<T>(string group, T message)
@@ -23,7 +28,7 @@ namespace NebulaBus
             var header = BuildNebulaHeader<T>(group);
             foreach (var processor in _processors)
             {
-                await processor.Send(group, JsonConvert.SerializeObject(message), header);
+                await processor.Publish(group, JsonConvert.SerializeObject(message), header);
             }
         }
 
@@ -32,7 +37,7 @@ namespace NebulaBus
             var header = BuildNebulaHeader<T>(group, headers);
             foreach (var processor in _processors)
             {
-                await processor.Send(group, JsonConvert.SerializeObject(message), header);
+                await processor.Publish(group, JsonConvert.SerializeObject(message), header);
             }
         }
 
@@ -45,7 +50,7 @@ namespace NebulaBus
                 Group = group,
                 Header = header,
                 Message = JsonConvert.SerializeObject(message),
-                Name = "",
+                Name = group,
                 TriggerTime = DateTimeOffset.Now.AddSeconds(delay.TotalSeconds)
             });
         }
@@ -59,18 +64,17 @@ namespace NebulaBus
                 Group = group,
                 Header = header,
                 Message = JsonConvert.SerializeObject(message),
-                Name = "",
+                Name = group,
                 TriggerTime = DateTimeOffset.Now.AddSeconds(delay.TotalSeconds)
             });
         }
 
-        private static NebulaHeader BuildNebulaHeader<T>(string group)
+        private NebulaHeader BuildNebulaHeader<T>(string group)
         {
-            var newId = Guid.NewGuid().ToString();
+            var newId = _idWorker.NextId().ToString();
             var header = new NebulaHeader()
             {
                 { NebulaHeader.MessageType, typeof(T).ToString() },
-                { NebulaHeader.Group, group },
                 { NebulaHeader.Sender, Environment.MachineName },
                 { NebulaHeader.SendTimeStamp, DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString() },
                 { NebulaHeader.MessageId, newId },
@@ -79,12 +83,11 @@ namespace NebulaBus
             return header;
         }
 
-        private static NebulaHeader BuildNebulaHeader<T>(string group, IDictionary<string, string> headers)
+        private NebulaHeader BuildNebulaHeader<T>(string group, IDictionary<string, string> headers)
         {
-            var newId = Guid.NewGuid().ToString();
+            var newId = _idWorker.NextId().ToString();
             var header = new NebulaHeader(headers);
             header[NebulaHeader.MessageType] = typeof(T).ToString();
-            header[NebulaHeader.Group] = group;
             header[NebulaHeader.Sender] = Environment.MachineName;
             header[NebulaHeader.SendTimeStamp] = DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString();
             header[NebulaHeader.MessageId] = newId;

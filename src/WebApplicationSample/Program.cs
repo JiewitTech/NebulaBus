@@ -4,6 +4,7 @@ using WebApplicationSample.Messages;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.WebHost.UseUrls("http://*:0");
+builder.Logging.AddConsole();
 var environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
 
 builder.Configuration.SetBasePath(Directory.GetCurrentDirectory())
@@ -28,7 +29,7 @@ builder.Services.AddNebulaBus(options =>
         rabbitmq.VirtualHost = configuration!.GetValue<string>("RabbitMq:VirtualHost");
     });
 });
-builder.Services.AddNebulaBusHandler<TestHandler, TestMessage>();
+builder.Services.AddNebulaBusHandler<TestHandlerV1, TestMessage>();
 builder.Services.AddNebulaBusHandler<TestHandlerV2, TestMessage>();
 
 var app = builder.Build();

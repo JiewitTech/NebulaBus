@@ -1,5 +1,4 @@
-﻿using System;
-using CSRedis;
+﻿using CSRedis;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -19,12 +18,12 @@ namespace NebulaBus.Store.Redis
 
         public async Task Add(DelayStoreMessage delayStoreMessage)
         {
-            await _redisClient.HSetAsync(RedisKey, $"{delayStoreMessage.MessageId}", delayStoreMessage);
+            await _redisClient.HSetAsync(RedisKey, $"{delayStoreMessage.MessageId}.{delayStoreMessage.Name}", delayStoreMessage);
         }
 
-        public async Task Delete(string messageId)
+        public async Task Delete(DelayStoreMessage delayStoreMessage)
         {
-            await _redisClient.HDelAsync(RedisKey, $"{messageId}");
+            await _redisClient.HDelAsync(RedisKey, $"{delayStoreMessage.MessageId}.{delayStoreMessage.Name}");
         }
 
         public async Task<Dictionary<string, DelayStoreMessage>> GetAll()
@@ -35,8 +34,8 @@ namespace NebulaBus.Store.Redis
 
         public bool Lock()
         {
-           var redisLock= _redisClient.Lock($"{RedisLockKey}.Lock", 1, true);
-           return redisLock != null;
+            var redisLock = _redisClient.Lock($"{RedisLockKey}.Lock", 1, true);
+            return redisLock != null;
         }
     }
 }

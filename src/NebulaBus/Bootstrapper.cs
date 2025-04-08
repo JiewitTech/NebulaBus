@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using NebulaBus.Scheduler;
 using System;
 using System.Collections.Generic;
@@ -13,11 +14,13 @@ namespace NebulaBus
         private CancellationTokenSource? _cts;
         private bool _disposed;
         private readonly IDelayMessageScheduler _delayMessageScheduler;
+        private readonly ILogger<Bootstrapper> _logger;
 
-        public Bootstrapper(IEnumerable<IProcessor> startUps, IDelayMessageScheduler delayMessageScheduler)
+        public Bootstrapper(IEnumerable<IProcessor> startUps, IDelayMessageScheduler delayMessageScheduler, ILogger<Bootstrapper> logger)
         {
             _processors = startUps;
             _delayMessageScheduler = delayMessageScheduler;
+            _logger = logger;
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -47,7 +50,10 @@ namespace NebulaBus
                     _cts.Token.ThrowIfCancellationRequested();
                     await processor.Start(_cts.Token);
                 }
-                catch { }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, $"Start Processor:{processor.GetType().Name} Failed");
+                }
             }
 
             //Start Store Scheduler

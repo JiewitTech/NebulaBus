@@ -6,7 +6,7 @@ namespace NebulaBus.Store
     internal interface IStore
     {
         Task Add(DelayStoreMessage delayStoreMessage);
-        Task Delete(string messageId);
+        Task Delete(DelayStoreMessage delayStoreMessage);
         Task<Dictionary<string, DelayStoreMessage>> GetAll();
         bool Lock();
     }
