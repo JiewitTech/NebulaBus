@@ -7,6 +7,6 @@ namespace NebulaBus
     internal interface IProcessor : IDisposable
     {
         Task Start(CancellationToken cancellationToken);
-        Task Send(string group, string message, NebulaHeader header);
+        Task Publish(string routingKey, string message, NebulaHeader header);
     }
 }

@@ -34,10 +34,10 @@ namespace NebulaBus.Scheduler
                 if (messageData == null) return;
                 foreach (var processor in _processors)
                 {
-                    await processor.Send(messageData.Group, messageData.Message, messageData.Header);
+                    await processor.Publish(messageData.Name, messageData.Message, messageData.Header);
                 }
 
-                await _store.Delete(messageData.MessageId);
+                await _store.Delete(messageData);
             }
             catch (Exception e)
             {

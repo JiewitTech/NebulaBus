@@ -1,28 +1,36 @@
-﻿using RabbitMQ.Client;
+﻿using Microsoft.Extensions.Logging;
+using NebulaBus.Scheduler;
+using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
-using System.Threading.Channels;
 using System.Threading.Tasks;
 
 namespace NebulaBus.Rabbitmq
 {
-    public class RabbitmqProcessor : IProcessor
+    internal class RabbitmqProcessor : IProcessor
     {
         private readonly RabbitmqOptions _rabbitmqOptions;
         private readonly IEnumerable<NebulaHandler> _nebulaHandlers;
         private IConnection? _connection;
         private readonly List<IChannel> _channels;
         private IChannel _senderChannel;
+        private readonly IDelayMessageScheduler _delayMessageScheduler;
+        private readonly ILogger<RabbitmqProcessor> _logger;
+        private bool _started;
 
-        public RabbitmqProcessor(NebulaOptions nebulaOptions, IEnumerable<NebulaHandler> nebulaHandlers)
+        public RabbitmqProcessor(NebulaOptions nebulaOptions,
+            IDelayMessageScheduler delayMessageScheduler,
+            IEnumerable<NebulaHandler> nebulaHandlers,
+            ILogger<RabbitmqProcessor> logger)
         {
             _rabbitmqOptions = nebulaOptions.RabbitmqOptions;
             _nebulaHandlers = nebulaHandlers;
             _channels = new List<IChannel>();
+            _delayMessageScheduler = delayMessageScheduler;
+            _logger = logger;
         }
 
         public void Dispose()
@@ -56,9 +64,15 @@ namespace NebulaBus.Rabbitmq
             foreach (var handler in _nebulaHandlers)
             {
                 var channel = await _connection.CreateChannelAsync();
+
+                //Create Exchange
                 await channel.ExchangeDeclareAsync(_rabbitmqOptions.ExchangeName, ExchangeType.Direct);
                 await channel.QueueDeclareAsync(handler.Name, false, false, false, null);
+                //Bind Group RoutingKey
                 await channel.QueueBindAsync(handler.Name, _rabbitmqOptions.ExchangeName, handler.Group, null);
+                //Bind Name RoutingKey
+                await channel.QueueBindAsync(handler.Name, _rabbitmqOptions.ExchangeName, handler.Name, null);
+
                 _channels.Add(channel);
                 var consumer = new AsyncEventingBasicConsumer(channel);
                 await channel.BasicConsumeAsync(handler.Name, false, consumer, cancellationToken);
@@ -71,50 +85,34 @@ namespace NebulaBus.Rabbitmq
                     if (ea.BasicProperties.Headers != null)
                     {
                         foreach (var item in ea.BasicProperties.Headers!)
-                            header.Add(item.Key, item.Value!.ToString());
-                    }
-
-                    int.TryParse(header[NebulaHeader.RetryCount], out var retryCount);
-
-                    try
-                    {
-                        if (retryCount > handler.MaxRetryCount) return;
-                        header[NebulaHeader.RetryCount] = (retryCount + 1).ToString();
-
-                        await handler.Subscribe(message, header);
-                    }
-                    catch (Exception ex)
-                    {
-                        header[NebulaHeader.Exception] = ex.ToString();
-
-                        //First Time to retry，if no delay then send directly
-                        if (handler.RetryDelay.TotalSeconds <= 0)
                         {
-                            await Send(handler.Group, message, header);
-                            return;
+                            if (item.Value is byte[] bytes) header.Add(item.Key, Encoding.UTF8.GetString(bytes));
                         }
-
-                        //Interval Retry
                     }
-                    finally
-                    {
-                        await channel.BasicAckAsync(ea.DeliveryTag, false);
-                    }
+                    await handler.Subscribe(this, _delayMessageScheduler, message, header);
+                    await channel.BasicAckAsync(ea.DeliveryTag, false);
                 };
             }
+
+            _started = true;
         }
 
-        public async Task Send(string group, string message, NebulaHeader header)
+        public async Task Publish(string routingKey, string message, NebulaHeader header)
         {
+            if (!_started)
+            {
+                _logger.LogError($"Processor {this.GetType().Name} not started");
+                return;
+            }
             byte[] messageBodyBytes = Encoding.UTF8.GetBytes(message);
             var props = new BasicProperties()
             {
                 Headers = new Dictionary<string, object?>()
             };
             foreach (var item in header)
-                props.Headers!.Add(item.Key, item.Value);
+                props.Headers.Add(item.Key, item.Value);
 
-            await _senderChannel.BasicPublishAsync(_rabbitmqOptions.ExchangeName, group, false, props,
+            await _senderChannel.BasicPublishAsync(_rabbitmqOptions.ExchangeName, routingKey, false, props,
                 messageBodyBytes);
         }
     }

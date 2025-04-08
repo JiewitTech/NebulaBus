@@ -16,14 +16,14 @@ namespace NebulaBus.Store.Memory
 
         public async Task Add(DelayStoreMessage delayStoreMessage)
         {
-            _storeMessages.AddOrUpdate(delayStoreMessage.MessageId, c => delayStoreMessage,
+            _storeMessages.AddOrUpdate($"{delayStoreMessage.MessageId}.{delayStoreMessage.Name}", c => delayStoreMessage,
                 (c, o) => delayStoreMessage);
             await Task.CompletedTask;
         }
 
-        public async Task Delete(string messageId)
+        public async Task Delete(DelayStoreMessage delayStoreMessage)
         {
-            _storeMessages.TryRemove(messageId, out _);
+            _storeMessages.TryRemove($"{delayStoreMessage.MessageId}.{delayStoreMessage.Name}", out _);
             await Task.CompletedTask;
         }
 
