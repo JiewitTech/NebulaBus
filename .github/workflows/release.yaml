@@ -39,7 +39,7 @@ jobs:
           dotnet pack NebulaBus.csproj /p:FileVersion=${{ steps.gitversion.outputs.version }} /p:Version=${{ steps.gitversion.outputs.version }}  -p:PackageVersion=${{ steps.gitversion.outputs.version }} --output nupkgs
 
       - name: Push to NuGet
-        working-directory: .
+        working-directory: src/NebulaBus
         run: dotnet nuget push "nupkgs/*.nupkg" --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json
 
       - name: Create Git Tag
