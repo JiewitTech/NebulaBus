@@ -21,40 +21,51 @@ jobs:
         with:
           dotnet-version: "8.0.x"
 
-      - name: Install GitVersion
-        uses: gittools/actions/gitversion/setup@v3.2.0
-        with:
-          versionSpec: "6.2.x"
-
-      - name: Determine Version
+      - name: Git Semantic Version
         id: gitversion
-        uses: gittools/actions/gitversion/execute@v3.2.0
+        uses: PaulHatch/semantic-version@v5.4.0
         with:
-          updateAssemblyInfo: true
-          useConfigFile: true
-          configFilePath: src/GitVersion.yaml
+          tag_prefix: "v"
+          major_pattern: "(MAJOR)"
+          minor_pattern: "(MINOR)"
+          version_format: "${major}.${minor}.${patch}.${increment}"
+          change_path: "src/NebulaBus"
+
+      # - name: Install GitVersion
+      #   uses: gittools/actions/gitversion/setup@v3.2.0
+      #   with:
+      #     versionSpec: "6.2.x"
+
+      # - name: Determine Version
+      #   id: gitversion
+      #   uses: gittools/actions/gitversion/execute@v3.2.0
+      #   with:
+      #     updateAssemblyInfo: true
+      #     useConfigFile: true
+      #     configFilePath: src/GitVersion.yaml
           
       - run: |
-          echo "FullSemVer (env.fullSemVer)            : ${{ env.fullSemVer }}"
+          echo "FullSemVer (env.fullSemVer)            : ${{ steps.gitversion.outputs }}"
         name: Display GitVersion variables (without prefix)
 
-      - run: |
-          echo "FullSemVer (env.GitVersion_FullSemVer) : ${{ env.GitVersion_FullSemVer }}"
-        name: Display GitVersion variables (with prefix)
+      # - run: |
+      #     echo "FullSemVer (env.GitVersion_FullSemVer) : ${{ env.GitVersion_FullSemVer }}"
+      #   name: Display GitVersion variables (with prefix)
 
-      - run: |
-          echo "FullSemVer (steps.gitversion.outputs.fullSemVer)            : ${{ steps.gitversion.outputs.fullSemVer }}"
-        name: Display GitVersion outputs (step output without prefix)
+      # - run: |
+      #     echo "FullSemVer (steps.gitversion.outputs.fullSemVer)            : ${{ steps.gitversion.outputs.fullSemVer }}"
+      #   name: Display GitVersion outputs (step output without prefix)
 
-      - run: |
-          echo "FullSemVer (steps.gitversion.outputs.GitVersion_FullSemVer) : ${{ steps.gitversion.outputs.GitVersion_FullSemVer }}"
-        name: Display GitVersion outputs (step output with prefix)
+      # - run: |
+      #     echo "FullSemVer (steps.gitversion.outputs.GitVersion_FullSemVer) : ${{ steps.gitversion.outputs.GitVersion_FullSemVer }}"
+      #   name: Display GitVersion outputs (step output with prefix)
 
       - name: Build & Pack
+        working-directory: src/NebulaBus
         run: |
           dotnet restore
           dotnet build --configuration Release --no-restore
-          dotnet pack src/NebulaBus.csproj  -p:PackageVersion=${{ steps.gitversion.outputs.GitVersion_FullSemVer }} --output nupkgs
+          dotnet pack NebulaBus.csproj  -p:PackageVersion=${{ steps.gitversion.outputs.version }} --output nupkgs
 
       - name: Show Package
         run: |
