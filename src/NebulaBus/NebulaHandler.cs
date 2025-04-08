@@ -1,5 +1,5 @@
-﻿using System;
-using System.Text.Json;
+﻿using Newtonsoft.Json;
+using System;
 using System.Threading.Tasks;
 
 namespace NebulaBus
@@ -22,7 +22,7 @@ namespace NebulaBus
         {
             header[NebulaHeader.Consumer] = Environment.MachineName;
             if (string.IsNullOrEmpty(message)) return;
-            var data = JsonSerializer.Deserialize<T>(message);
+            var data = JsonConvert.DeserializeObject<T>(message);
             if (data == null) return;
             await Handle(data, header);
         }
