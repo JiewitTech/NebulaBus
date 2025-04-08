@@ -76,7 +76,7 @@ namespace NebulaBus
                 //First Time to retry，if no delay then send directly
                 if (retryCount == 0 && RetryDelay.TotalSeconds <= 0)
                 {
-                    await processor.Publish(Group, message, header);
+                    await processor.Publish(Name, message, header);
                     return;
                 }
 
@@ -94,6 +94,9 @@ namespace NebulaBus
                     });
                     return;
                 }
+
+                if (retryCount >= MaxRetryCount)
+                    return;
 
                 //Interval Retry
                 await delayMessageScheduler.Schedule(new Store.DelayStoreMessage()
