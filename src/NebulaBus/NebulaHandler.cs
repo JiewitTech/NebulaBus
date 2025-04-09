@@ -114,6 +114,6 @@ namespace NebulaBus
             }
         }
 
-        public abstract Task Handle(T message, NebulaHeader header);
+        protected abstract Task Handle(T message, NebulaHeader header);
     }
 }

@@ -8,7 +8,7 @@ namespace WebApplicationSample.Handlers
         public override string Name => "NebulaBus.TestHandler.V2";
         public override string Group => "NebulaBus.TestHandler";
 
-        public override async Task Handle(TestMessage message, NebulaHeader header)
+        protected override async Task Handle(TestMessage message, NebulaHeader header)
         {
             Console.WriteLine($"{DateTime.Now} Received Message {Name}:{message.Message}");
         }

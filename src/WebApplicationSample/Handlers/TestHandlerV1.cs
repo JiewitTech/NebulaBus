@@ -10,7 +10,7 @@ namespace WebApplicationSample.Handlers
         public override TimeSpan RetryDelay => TimeSpan.FromSeconds(0);
         public override int MaxRetryCount => 3;
 
-        public override async Task Handle(TestMessage message, NebulaHeader header)
+        protected override async Task Handle(TestMessage message, NebulaHeader header)
         {
             Console.WriteLine($"{DateTime.Now} Received Message {Name}:{message.Message}");
             throw new Exception("Test Exception");
