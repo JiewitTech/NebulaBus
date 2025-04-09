@@ -36,9 +36,6 @@ namespace NebulaBus
 
     public abstract class NebulaHandler<T> : NebulaHandler
     {
-        public override string Name => this.GetType().Name;
-        public override string Group => typeof(T).Name;
-
         internal override async Task Subscribe(IProcessor processor, IDelayMessageScheduler delayMessageScheduler,
             string message, NebulaHeader header)
         {

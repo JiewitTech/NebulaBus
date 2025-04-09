@@ -6,17 +6,17 @@ namespace WebApplicationSample.Controllers
 {
     [ApiController]
     [Route("[controller]")]
-    public class WeatherForecastController : ControllerBase
+    public class TestController : ControllerBase
     {
         private static readonly string[] Summaries = new[]
         {
             "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
         };
 
-        private readonly ILogger<WeatherForecastController> _logger;
+        private readonly ILogger<TestController> _logger;
         private readonly INebulaBus _bus;
 
-        public WeatherForecastController(ILogger<WeatherForecastController> logger, INebulaBus nebulaBus)
+        public TestController(ILogger<TestController> logger, INebulaBus nebulaBus)
         {
             _logger = logger;
             _bus = nebulaBus;

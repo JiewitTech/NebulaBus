@@ -23,52 +23,52 @@ namespace NebulaBus
             _idWorker = new IdWorker(result, 1);
         }
 
-        public async Task PublishAsync<T>(string group, T message)
+        public async Task PublishAsync<T>(string nameOrGroup, T message)
             where T : class, new()
         {
-            var header = BuildNebulaHeader<T>(group);
+            var header = BuildNebulaHeader<T>(nameOrGroup);
             foreach (var processor in _processors)
             {
-                await processor.Publish(group, JsonConvert.SerializeObject(message), header);
+                await processor.Publish(nameOrGroup, JsonConvert.SerializeObject(message), header);
             }
         }
 
-        public async Task PublishAsync<T>(string group, T message, IDictionary<string, string> headers)
+        public async Task PublishAsync<T>(string nameOrGroup, T message, IDictionary<string, string> headers)
             where T : class, new()
         {
-            var header = BuildNebulaHeader<T>(group, headers);
+            var header = BuildNebulaHeader<T>(nameOrGroup, headers);
             foreach (var processor in _processors)
             {
-                await processor.Publish(group, JsonConvert.SerializeObject(message), header);
+                await processor.Publish(nameOrGroup, JsonConvert.SerializeObject(message), header);
             }
         }
 
-        public async Task PublishAsync<T>(TimeSpan delay, string group, T message)
+        public async Task PublishAsync<T>(TimeSpan delay, string nameOrGroup, T message)
             where T : class, new()
         {
-            var header = BuildNebulaHeader<T>(group);
+            var header = BuildNebulaHeader<T>(nameOrGroup);
             await _delayMessageScheduler.Schedule(new DelayStoreMessage()
             {
                 MessageId = header[NebulaHeader.MessageId]!,
-                Group = group,
+                Group = nameOrGroup,
                 Header = header,
                 Message = JsonConvert.SerializeObject(message),
-                Name = group,
+                Name = nameOrGroup,
                 TriggerTime = DateTimeOffset.Now.AddSeconds(delay.TotalSeconds)
             });
         }
 
-        public async Task PublishAsync<T>(TimeSpan delay, string group, T message, IDictionary<string, string> headers)
+        public async Task PublishAsync<T>(TimeSpan delay, string nameOrGroup, T message, IDictionary<string, string> headers)
             where T : class, new()
         {
-            var header = BuildNebulaHeader<T>(group, headers);
+            var header = BuildNebulaHeader<T>(nameOrGroup, headers);
             await _delayMessageScheduler.Schedule(new DelayStoreMessage()
             {
                 MessageId = header[NebulaHeader.MessageId]!,
-                Group = group,
+                Group = nameOrGroup,
                 Header = header,
                 Message = JsonConvert.SerializeObject(message),
-                Name = group,
+                Name = nameOrGroup,
                 TriggerTime = DateTimeOffset.Now.AddSeconds(delay.TotalSeconds)
             });
         }

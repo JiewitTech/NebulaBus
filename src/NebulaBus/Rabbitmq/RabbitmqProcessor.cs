@@ -64,7 +64,7 @@ namespace NebulaBus.Rabbitmq
             foreach (var handler in _nebulaHandlers)
             {
                 var channel = await _connection.CreateChannelAsync();
-
+                
                 //Create Exchange
                 await channel.ExchangeDeclareAsync(_rabbitmqOptions.ExchangeName, ExchangeType.Direct);
                 await channel.QueueDeclareAsync(handler.Name, false, false, false, null);
