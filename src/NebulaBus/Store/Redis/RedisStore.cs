@@ -1,6 +1,8 @@
-﻿using CSRedis;
+﻿using System;
+using CSRedis;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace NebulaBus.Store.Redis
 {
@@ -11,14 +13,15 @@ namespace NebulaBus.Store.Redis
 
         private readonly CSRedisClient _redisClient;
 
-        public RedisStore(CSRedisClient cSRedisClient)
+        public RedisStore(IServiceProvider provider)
         {
-            _redisClient = cSRedisClient;
+            _redisClient = provider.GetKeyedService<CSRedisClient>("NebulaBusRedis")!;
         }
 
         public async Task Add(DelayStoreMessage delayStoreMessage)
         {
-            await _redisClient.HSetAsync(RedisKey, $"{delayStoreMessage.MessageId}.{delayStoreMessage.Name}", delayStoreMessage);
+            await _redisClient.HSetAsync(RedisKey, $"{delayStoreMessage.MessageId}.{delayStoreMessage.Name}",
+                delayStoreMessage);
         }
 
         public async Task Delete(DelayStoreMessage delayStoreMessage)

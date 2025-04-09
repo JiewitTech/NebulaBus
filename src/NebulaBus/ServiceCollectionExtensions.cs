@@ -23,7 +23,6 @@ namespace Microsoft.Extensions.DependencyInjection
             setupAction(options);
             services.AddSingleton(options);
             services.AddSingleton<INebulaBus, NebulaBusService>();
-            services.AddSingleton<IStore, RedisStore>();
             services.AddSingleton<IDelayMessageScheduler, DelayMessageScheduler>();
 
             //Schedule job
@@ -38,7 +37,8 @@ namespace Microsoft.Extensions.DependencyInjection
             if (!string.IsNullOrEmpty(options.RedisConnectionString))
             {
                 var redisClient = new CSRedis.CSRedisClient(options.RedisConnectionString);
-                services.AddSingleton(redisClient);
+                services.AddKeyedSingleton("NebulaBusRedis", redisClient);
+                services.AddSingleton<IStore, RedisStore>();
             }
             else
             {
