@@ -9,12 +9,12 @@ namespace NebulaBus
     {
         public abstract string Name { get; }
         public abstract string Group { get; }
-        public virtual bool LoopRetry => false;
         public virtual TimeSpan RetryInterval => TimeSpan.FromSeconds(10);
-        public virtual TimeSpan RetryDelay => TimeSpan.FromSeconds(10);
+        public virtual TimeSpan RetryDelay => TimeSpan.FromSeconds(5);
         public virtual int MaxRetryCount => 10;
 
-        internal abstract Task Subscribe(IProcessor processor, IDelayMessageScheduler delayMessageScheduler, string message, NebulaHeader header);
+        internal abstract Task Subscribe(IProcessor processor, IDelayMessageScheduler delayMessageScheduler,
+            string message, NebulaHeader header);
 
         protected async Task Execute(Func<Task> operation)
         {
@@ -36,7 +36,11 @@ namespace NebulaBus
 
     public abstract class NebulaHandler<T> : NebulaHandler
     {
-        internal override async Task Subscribe(IProcessor processor, IDelayMessageScheduler delayMessageScheduler, string message, NebulaHeader header)
+        public override string Name => this.GetType().Name;
+        public override string Group => typeof(T).Name;
+
+        internal override async Task Subscribe(IProcessor processor, IDelayMessageScheduler delayMessageScheduler,
+            string message, NebulaHeader header)
         {
             if (string.IsNullOrEmpty(message)) return;
             header[NebulaHeader.Consumer] = Environment.MachineName;
@@ -47,7 +51,6 @@ namespace NebulaBus
             try
             {
                 if (retryCount > MaxRetryCount) return;
-                Console.WriteLine($"{DateTime.Now} 重试第{retryCount}次");
                 header[NebulaHeader.RetryCount] = (retryCount + 1).ToString();
 
                 //首次执行若发生异常直接重试三次
