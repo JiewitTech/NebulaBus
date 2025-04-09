@@ -19,6 +19,14 @@ namespace NebulaBus
 
         private readonly Dictionary<string, string> _dic;
 
+        public string GetRequestId() => this[RequestId];
+        public string GetMessageId() => this[MessageId];
+        public int GetRetryCount()
+        {
+            int.TryParse(this[RetryCount], out var result);
+            return result;
+        }
+
         public NebulaHeader()
         {
             _dic = new Dictionary<string, string>();
