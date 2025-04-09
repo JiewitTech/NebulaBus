@@ -1,8 +1,8 @@
-﻿using Microsoft.Extensions.Hosting;
+﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using NebulaBus.Scheduler;
 using System;
-using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -10,16 +10,14 @@ namespace NebulaBus
 {
     internal class Bootstrapper : BackgroundService, IAsyncDisposable
     {
-        private readonly IEnumerable<IProcessor> _processors;
         private CancellationTokenSource? _cts;
         private bool _disposed;
-        private readonly IDelayMessageScheduler _delayMessageScheduler;
+        private readonly IServiceProvider _serviceProvider;
         private readonly ILogger<Bootstrapper> _logger;
 
-        public Bootstrapper(IEnumerable<IProcessor> startUps, IDelayMessageScheduler delayMessageScheduler, ILogger<Bootstrapper> logger)
+        public Bootstrapper(IServiceProvider serviceProvider, ILogger<Bootstrapper> logger)
         {
-            _processors = startUps;
-            _delayMessageScheduler = delayMessageScheduler;
+            _serviceProvider = serviceProvider;
             _logger = logger;
         }
 
@@ -28,6 +26,9 @@ namespace NebulaBus
             if (_cts != null)
                 return;
             _cts = CancellationTokenSource.CreateLinkedTokenSource(stoppingToken);
+
+            var _processors = _serviceProvider.GetServices<IProcessor>();
+            var _delayMessageScheduler = _serviceProvider.GetService<IDelayMessageScheduler>();
 
             //If cancelled, dispose of all processors
             _cts.Token.Register(() =>

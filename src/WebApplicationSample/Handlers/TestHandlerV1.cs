@@ -10,6 +10,13 @@ namespace WebApplicationSample.Handlers
         public override TimeSpan RetryDelay => TimeSpan.FromSeconds(0);
         public override int MaxRetryCount => 3;
 
+        private readonly INebulaBus _bus;
+
+        public TestHandlerV1(INebulaBus nebulaBus)
+        {
+            _bus = nebulaBus;
+        }
+
         protected override async Task Handle(TestMessage message, NebulaHeader header)
         {
             Console.WriteLine($"{DateTime.Now} Received Message {Name}:{message.Message} Header:{header["customHeader"]} RetryCount:{header[NebulaHeader.RetryCount]}");
