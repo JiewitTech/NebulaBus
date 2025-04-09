@@ -1,15 +1,14 @@
-﻿using System;
-using CSRedis;
+﻿using CSRedis;
+using Microsoft.Extensions.DependencyInjection;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Microsoft.Extensions.DependencyInjection;
-using System.Reflection;
 
 namespace NebulaBus.Store.Redis
 {
     internal class RedisStore : IStore
     {
-        private const string RedisKey = "NebulaBus:DelayMessage";
+        private string RedisKey => $"NebulaBus:{_nebulaOptions.ClusterName}.Store";
 
         private readonly CSRedisClient _redisClient;
         private readonly NebulaOptions _nebulaOptions;
@@ -39,7 +38,7 @@ namespace NebulaBus.Store.Redis
 
         public bool Lock()
         {
-            var redisLock = _redisClient.Lock($"NebulaBus:{_nebulaOptions.ClusterName}", 1, true);
+            var redisLock = _redisClient.Lock($"NebulaBus:{_nebulaOptions.ClusterName}.Lock", 1, true);
             return redisLock != null;
         }
     }
