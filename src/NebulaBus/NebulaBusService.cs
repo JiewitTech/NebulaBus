@@ -1,4 +1,5 @@
-﻿using NebulaBus.Scheduler;
+﻿using Microsoft.Extensions.DependencyInjection;
+using NebulaBus.Scheduler;
 using NebulaBus.Store;
 using Newtonsoft.Json;
 using Snowflake.Core;
@@ -14,10 +15,10 @@ namespace NebulaBus
         private readonly IDelayMessageScheduler _delayMessageScheduler;
         private readonly IdWorker _idWorker;
 
-        public NebulaBusService(IEnumerable<IProcessor> processors, IDelayMessageScheduler delayMessageScheduler)
+        public NebulaBusService(IServiceProvider serviceProvider)
         {
-            _processors = processors;
-            _delayMessageScheduler = delayMessageScheduler;
+            _processors = serviceProvider.GetRequiredService<IEnumerable<IProcessor>>();
+            _delayMessageScheduler = serviceProvider.GetRequiredService<IDelayMessageScheduler>();
             if (!long.TryParse(Environment.GetEnvironmentVariable("NEBULABUS_WORKERID"), out var result))
                 result = 1;
             _idWorker = new IdWorker(result, 1);

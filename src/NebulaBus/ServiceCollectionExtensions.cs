@@ -3,14 +3,13 @@ using NebulaBus;
 using NebulaBus.Rabbitmq;
 using NebulaBus.Scheduler;
 using NebulaBus.Store;
+using NebulaBus.Store.Memory;
 using NebulaBus.Store.Redis;
 using Quartz;
+using Quartz.Spi;
 using System;
 using System.Linq;
 using System.Reflection;
-using NebulaBus.Store.Memory;
-using Quartz.Simpl;
-using Quartz.Spi;
 
 namespace Microsoft.Extensions.DependencyInjection
 {
@@ -25,13 +24,14 @@ namespace Microsoft.Extensions.DependencyInjection
             setupAction(options);
             services.AddSingleton(options);
             services.AddSingleton<INebulaBus, NebulaBusService>();
-            services.AddSingleton<IDelayMessageScheduler, DelayMessageScheduler>();
+
+            //Processor
+            services.TryAddEnumerable(ServiceDescriptor.Singleton<IProcessor, RabbitmqProcessor>());
 
             //Schedule job
+            services.AddSingleton<IDelayMessageScheduler, DelayMessageScheduler>();
             services.AddKeyedSingleton<IJobFactory, NebulaBusJobFactory>("NebulaBusJobFactory");
             services.AddKeyedScoped<IJob, DelayMessageSendJob>("NebulaBusDelayMessageSendJob");
-
-            services.TryAddEnumerable(ServiceDescriptor.Singleton<IProcessor, RabbitmqProcessor>());
 
             services.Configure(setupAction);
 
