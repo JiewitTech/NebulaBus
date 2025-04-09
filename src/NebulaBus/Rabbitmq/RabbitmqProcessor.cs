@@ -69,9 +69,12 @@ namespace NebulaBus.Rabbitmq
                 await channel.ExchangeDeclareAsync(_rabbitmqOptions.ExchangeName, ExchangeType.Direct);
                 await channel.QueueDeclareAsync(handler.Name, false, false, false, null);
                 //Bind Group RoutingKey
-                await channel.QueueBindAsync(handler.Name, _rabbitmqOptions.ExchangeName, handler.Group, null);
+                if (!string.IsNullOrEmpty(handler.Group))
+                    await channel.QueueBindAsync(handler.Name, _rabbitmqOptions.ExchangeName, handler.Group, null);
+
                 //Bind Name RoutingKey
-                await channel.QueueBindAsync(handler.Name, _rabbitmqOptions.ExchangeName, handler.Name, null);
+                if (!string.IsNullOrEmpty(handler.Name))
+                    await channel.QueueBindAsync(handler.Name, _rabbitmqOptions.ExchangeName, handler.Name, null);
 
                 _channels.Add(channel);
                 var consumer = new AsyncEventingBasicConsumer(channel);
@@ -89,6 +92,7 @@ namespace NebulaBus.Rabbitmq
                             if (item.Value is byte[] bytes) header.Add(item.Key, Encoding.UTF8.GetString(bytes));
                         }
                     }
+
                     await handler.Subscribe(this, _delayMessageScheduler, message, header);
                     await channel.BasicAckAsync(ea.DeliveryTag, false);
                 };
@@ -104,6 +108,7 @@ namespace NebulaBus.Rabbitmq
                 _logger.LogError($"Processor {this.GetType().Name} not started");
                 return;
             }
+
             byte[] messageBodyBytes = Encoding.UTF8.GetBytes(message);
             var props = new BasicProperties()
             {
