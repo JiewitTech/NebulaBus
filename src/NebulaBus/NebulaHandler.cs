@@ -47,7 +47,6 @@ namespace NebulaBus
             try
             {
                 if (retryCount > MaxRetryCount) return;
-                Console.WriteLine($"{DateTime.Now} 重试第{retryCount}次");
                 header[NebulaHeader.RetryCount] = (retryCount + 1).ToString();
 
                 //首次执行若发生异常直接重试三次
