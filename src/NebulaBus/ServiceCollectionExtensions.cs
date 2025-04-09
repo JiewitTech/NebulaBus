@@ -6,6 +6,8 @@ using NebulaBus.Store;
 using NebulaBus.Store.Redis;
 using Quartz;
 using System;
+using System.Linq;
+using System.Reflection;
 using NebulaBus.Store.Memory;
 using Quartz.Simpl;
 using Quartz.Spi;
@@ -23,7 +25,6 @@ namespace Microsoft.Extensions.DependencyInjection
             setupAction(options);
             services.AddSingleton(options);
             services.AddSingleton<INebulaBus, NebulaBusService>();
-            services.AddSingleton<IStore, RedisStore>();
             services.AddSingleton<IDelayMessageScheduler, DelayMessageScheduler>();
 
             //Schedule job
@@ -38,7 +39,8 @@ namespace Microsoft.Extensions.DependencyInjection
             if (!string.IsNullOrEmpty(options.RedisConnectionString))
             {
                 var redisClient = new CSRedis.CSRedisClient(options.RedisConnectionString);
-                services.AddSingleton(redisClient);
+                services.AddKeyedSingleton("NebulaBusRedis", redisClient);
+                services.AddSingleton<IStore, RedisStore>();
             }
             else
             {
@@ -48,16 +50,26 @@ namespace Microsoft.Extensions.DependencyInjection
             services.AddHostedService<Bootstrapper>();
         }
 
-        public static void AddNebulaBusHandler<H>(this IServiceCollection services)
-            where H : NebulaHandler
+        public static void AddNebulaBusHandler<TH>(this IServiceCollection services)
+            where TH : NebulaHandler
         {
-            services.TryAddEnumerable(ServiceDescriptor.Singleton<NebulaHandler, H>());
+            services.TryAddEnumerable(ServiceDescriptor.Singleton<NebulaHandler, TH>());
         }
 
-        public static void AddNebulaBusHandler<H, M>(this IServiceCollection services)
-            where H : NebulaHandler<M>
+        public static void AddNebulaBusHandler<TH, TM>(this IServiceCollection services)
+            where TH : NebulaHandler<TM>
         {
-            services.TryAddEnumerable(ServiceDescriptor.Singleton<NebulaHandler, H>());
+            services.TryAddEnumerable(ServiceDescriptor.Singleton<NebulaHandler, TH>());
+        }
+
+        public static void AddNebulaBusHandler(this IServiceCollection services, Assembly assembly)
+        {
+            var types = assembly.GetTypes()
+                .Where(t => t.IsClass && !t.IsAbstract && typeof(NebulaHandler).IsAssignableFrom(t));
+            foreach (var typeItem in types)
+            {
+                services.TryAddEnumerable(ServiceDescriptor.Singleton(typeof(NebulaHandler), typeItem));
+            }
         }
     }
 }

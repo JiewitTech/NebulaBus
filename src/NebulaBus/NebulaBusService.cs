@@ -24,6 +24,7 @@ namespace NebulaBus
         }
 
         public async Task PublishAsync<T>(string group, T message)
+            where T : class, new()
         {
             var header = BuildNebulaHeader<T>(group);
             foreach (var processor in _processors)
@@ -33,6 +34,7 @@ namespace NebulaBus
         }
 
         public async Task PublishAsync<T>(string group, T message, IDictionary<string, string> headers)
+            where T : class, new()
         {
             var header = BuildNebulaHeader<T>(group, headers);
             foreach (var processor in _processors)
@@ -42,6 +44,7 @@ namespace NebulaBus
         }
 
         public async Task PublishAsync<T>(TimeSpan delay, string group, T message)
+            where T : class, new()
         {
             var header = BuildNebulaHeader<T>(group);
             await _delayMessageScheduler.Schedule(new DelayStoreMessage()
@@ -56,6 +59,7 @@ namespace NebulaBus
         }
 
         public async Task PublishAsync<T>(TimeSpan delay, string group, T message, IDictionary<string, string> headers)
+            where T : class, new()
         {
             var header = BuildNebulaHeader<T>(group, headers);
             await _delayMessageScheduler.Schedule(new DelayStoreMessage()
@@ -70,6 +74,7 @@ namespace NebulaBus
         }
 
         private NebulaHeader BuildNebulaHeader<T>(string group)
+            where T : class, new()
         {
             var newId = _idWorker.NextId().ToString();
             var header = new NebulaHeader()
@@ -84,6 +89,7 @@ namespace NebulaBus
         }
 
         private NebulaHeader BuildNebulaHeader<T>(string group, IDictionary<string, string> headers)
+            where T : class, new()
         {
             var newId = _idWorker.NextId().ToString();
             var header = new NebulaHeader(headers);

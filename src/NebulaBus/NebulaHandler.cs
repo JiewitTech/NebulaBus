@@ -46,12 +46,11 @@ namespace NebulaBus
             header[NebulaHeader.Consumer] = Environment.MachineName;
             header[NebulaHeader.Name] = Name;
             header[NebulaHeader.Group] = Group;
-            int.TryParse(header[NebulaHeader.RetryCount], out var retryCount);
+            var retryCount = header.GetRetryCount();
 
             try
             {
                 if (retryCount > MaxRetryCount) return;
-                header[NebulaHeader.RetryCount] = (retryCount + 1).ToString();
 
                 //首次执行若发生异常直接重试三次
                 if (retryCount == 0)
@@ -76,6 +75,8 @@ namespace NebulaBus
 
                 //no retry
                 if (MaxRetryCount == 0) return;
+                header[NebulaHeader.RetryCount] = (retryCount + 1).ToString();
+
                 //First Time to retry，if no delay then send directly
                 if (retryCount == 0 && RetryDelay.TotalSeconds <= 0)
                 {

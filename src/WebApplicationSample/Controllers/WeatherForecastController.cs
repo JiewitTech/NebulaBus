@@ -26,13 +26,18 @@ namespace WebApplicationSample.Controllers
         public IEnumerable<WeatherForecast> Publish()
         {
             _logger.LogInformation($"{DateTime.Now} Start send Message");
-            _bus.PublishAsync("NebulaBus.TestHandler", new TestMessage { Message = "Hello World" });
+            _bus.PublishAsync("NebulaBus.TestHandler", new TestMessage { Message = "Hello World" },
+                new Dictionary<string, string>()
+                {
+                    { "customHeader", "123456" },
+                    { NebulaHeader.RequestId, "8889999" },
+                });
             return Enumerable.Range(1, 5).Select(index => new WeatherForecast
-            {
-                Date = DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-                TemperatureC = Random.Shared.Next(-20, 55),
-                Summary = Summaries[Random.Shared.Next(Summaries.Length)]
-            })
+                {
+                    Date = DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
+                    TemperatureC = Random.Shared.Next(-20, 55),
+                    Summary = Summaries[Random.Shared.Next(Summaries.Length)]
+                })
                 .ToArray();
         }
 
@@ -43,11 +48,11 @@ namespace WebApplicationSample.Controllers
             _bus.PublishAsync(TimeSpan.FromSeconds(5), "NebulaBus.TestHandler",
                 new TestMessage { Message = "Hello World" });
             return Enumerable.Range(1, 5).Select(index => new WeatherForecast
-            {
-                Date = DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-                TemperatureC = Random.Shared.Next(-20, 55),
-                Summary = Summaries[Random.Shared.Next(Summaries.Length)]
-            })
+                {
+                    Date = DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
+                    TemperatureC = Random.Shared.Next(-20, 55),
+                    Summary = Summaries[Random.Shared.Next(Summaries.Length)]
+                })
                 .ToArray();
         }
 
@@ -57,11 +62,11 @@ namespace WebApplicationSample.Controllers
             _logger.LogInformation($"{DateTime.Now} Start send Message");
             _bus.PublishAsync("NebulaBus.TestHandler.V1", new TestMessage { Message = "Hello World" });
             return Enumerable.Range(1, 5).Select(index => new WeatherForecast
-            {
-                Date = DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-                TemperatureC = Random.Shared.Next(-20, 55),
-                Summary = Summaries[Random.Shared.Next(Summaries.Length)]
-            })
+                {
+                    Date = DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
+                    TemperatureC = Random.Shared.Next(-20, 55),
+                    Summary = Summaries[Random.Shared.Next(Summaries.Length)]
+                })
                 .ToArray();
         }
 
@@ -69,7 +74,8 @@ namespace WebApplicationSample.Controllers
         public IEnumerable<WeatherForecast> DelaySend()
         {
             _logger.LogInformation($"{DateTime.Now} Start send Message");
-            _bus.PublishAsync(TimeSpan.FromSeconds(5), "NebulaBus.TestHandler.V1", new TestMessage { Message = "Hello World" });
+            _bus.PublishAsync(TimeSpan.FromSeconds(5), "NebulaBus.TestHandler.V1",
+                new TestMessage { Message = "Hello World" });
             return Enumerable.Range(1, 5).Select(index => new WeatherForecast
             {
                 Date = DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
