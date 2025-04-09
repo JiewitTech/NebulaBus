@@ -29,8 +29,9 @@ builder.Services.AddNebulaBus(options =>
         rabbitmq.VirtualHost = configuration!.GetValue<string>("RabbitMq:VirtualHost");
     });
 });
-builder.Services.AddNebulaBusHandler<TestHandlerV1, TestMessage>();
-builder.Services.AddNebulaBusHandler<TestHandlerV2, TestMessage>();
+builder.Services.AddNebulaBusHandler(typeof(TestHandlerV1).Assembly);
+// builder.Services.AddNebulaBusHandler<TestHandlerV1, TestMessage>();
+// builder.Services.AddNebulaBusHandler<TestHandlerV2, TestMessage>();
 
 var app = builder.Build();
 
