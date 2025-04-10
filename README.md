@@ -41,12 +41,21 @@ builder.Services.AddNebulaBusHandler(typeof(TestHandlerV1).Assembly);
 //实现NebulaHandler<> 抽象类即可
  public class TestHandlerV1 : NebulaHandler<TestMessage>
     {
+        //订阅者唯一标识，用于定向发送
         public override string Name => "NebulaBus.TestHandler.V1";
+        //订阅者组，用于广播，相同组的订阅都将收到消息
         public override string Group => "NebulaBus.TestHandler";
+        //重试延迟，用于配置首次失败后多久重试，若不重写则默认10秒
+        public override TimeSpan RetryDelay => TimeSpan.FromSeconds(10);
+        //最大重试次数，若不重写则默认10次
+        public override int MaxRetryCount => 5;
+        //重试间隔，若不重写则默认10秒
+        public override TimeSpan RetryInterval => TimeSpan.FromSeconds(10);
 
         protected override async Task Handle(TestMessage message, NebulaHeader header)
         {
             Console.WriteLine($"{DateTime.Now} Received Message {Name}:{message.Message} Header:{header["customHeader"]} RetryCount:{header[NebulaHeader.RetryCount]}");
+            //TODO: your code
         }
     }
 ```
