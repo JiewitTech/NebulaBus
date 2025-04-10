@@ -38,7 +38,7 @@ namespace NebulaBus.Store.Redis
 
         public bool Lock()
         {
-            var redisLock = _redisClient.Lock($"NebulaBus:{_nebulaOptions.ClusterName}.Lock", 1, true);
+            var redisLock = _redisClient.Lock($"NebulaBus:{_nebulaOptions.ClusterName}.Lock", 2, true);
             return redisLock != null;
         }
     }
