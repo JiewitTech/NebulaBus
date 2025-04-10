@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 
 namespace NebulaBus.Store
 {
@@ -7,7 +6,7 @@ namespace NebulaBus.Store
     {
         Task Add(DelayStoreMessage delayStoreMessage);
         Task Delete(DelayStoreMessage delayStoreMessage);
-        Task<Dictionary<string, DelayStoreMessage>> GetAll();
+        Task<DelayStoreMessage[]?> GetAllByKeys(long beforeTimestamp);
         bool Lock();
     }
 }

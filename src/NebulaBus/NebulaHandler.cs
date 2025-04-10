@@ -117,7 +117,7 @@ namespace NebulaBus
                         Header = header,
                         Message = message,
                         MessageId = header[NebulaHeader.MessageId]!,
-                        TriggerTime = DateTimeOffset.Now.AddSeconds(RetryDelay.TotalSeconds)
+                        TriggerTime = DateTimeOffset.Now.AddSeconds(RetryDelay.TotalSeconds).ToUnixTimeSeconds()
                     });
                     return;
                 }
@@ -137,7 +137,7 @@ namespace NebulaBus
                     Header = header,
                     Message = message,
                     MessageId = header[NebulaHeader.MessageId]!,
-                    TriggerTime = DateTimeOffset.Now.AddSeconds(RetryInterval.TotalSeconds)
+                    TriggerTime = DateTimeOffset.Now.AddSeconds(RetryInterval.TotalSeconds).ToUnixTimeSeconds()
                 });
             }
         }

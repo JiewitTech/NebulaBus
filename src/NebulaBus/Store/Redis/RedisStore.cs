@@ -1,7 +1,6 @@
 ﻿using CSRedis;
 using Microsoft.Extensions.DependencyInjection;
 using System;
-using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace NebulaBus.Store.Redis
@@ -9,6 +8,7 @@ namespace NebulaBus.Store.Redis
     internal class RedisStore : IStore
     {
         private string RedisKey => $"NebulaBus:{_nebulaOptions.ClusterName}.Store";
+        private string IndexRedisKey => $"NebulaBus:{_nebulaOptions.ClusterName}.StoreIndex";
 
         private readonly CSRedisClient _redisClient;
         private readonly NebulaOptions _nebulaOptions;
@@ -21,18 +21,22 @@ namespace NebulaBus.Store.Redis
 
         public async Task Add(DelayStoreMessage delayStoreMessage)
         {
+            await _redisClient.ZAddAsync(IndexRedisKey, (delayStoreMessage.TriggerTime, $"{delayStoreMessage.MessageId}.{delayStoreMessage.Name}"));
             await _redisClient.HSetAsync(RedisKey, $"{delayStoreMessage.MessageId}.{delayStoreMessage.Name}",
                 delayStoreMessage);
         }
 
         public async Task Delete(DelayStoreMessage delayStoreMessage)
         {
+            await _redisClient.ZRemAsync(IndexRedisKey, $"{delayStoreMessage.MessageId}.{delayStoreMessage.Name}");
             await _redisClient.HDelAsync(RedisKey, $"{delayStoreMessage.MessageId}.{delayStoreMessage.Name}");
         }
 
-        public async Task<Dictionary<string, DelayStoreMessage>> GetAll()
+        public async Task<DelayStoreMessage[]?> GetAllByKeys(long beforeTimestamp)
         {
-            var result = await _redisClient.HGetAllAsync<DelayStoreMessage>(RedisKey);
+            var keys = await _redisClient.ZRangeByScoreAsync(IndexRedisKey, 0, beforeTimestamp);
+            if (keys == null) return null;
+            var result = await _redisClient.HMGetAsync<DelayStoreMessage>(RedisKey, keys!);
             return result;
         }
 

@@ -55,7 +55,7 @@ namespace NebulaBus
                 Header = header,
                 Message = JsonConvert.SerializeObject(message),
                 Name = nameOrGroup,
-                TriggerTime = DateTimeOffset.Now.AddSeconds(delay.TotalSeconds)
+                TriggerTime = DateTimeOffset.Now.AddSeconds(delay.TotalSeconds).ToUnixTimeSeconds()
             });
         }
 
@@ -70,7 +70,7 @@ namespace NebulaBus
                 Header = header,
                 Message = JsonConvert.SerializeObject(message),
                 Name = nameOrGroup,
-                TriggerTime = DateTimeOffset.Now.AddSeconds(delay.TotalSeconds)
+                TriggerTime = DateTimeOffset.Now.AddSeconds(delay.TotalSeconds).ToUnixTimeSeconds()
             });
         }
 
