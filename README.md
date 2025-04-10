@@ -74,6 +74,6 @@ _bus.PublishAsync("NebulaBus.TestHandler", new TestMessage { Message = "Hello Wo
         { NebulaHeader.RequestId, "8889999" },
     });
 ```
-示例请参考
+示例请参考：src/WebApplicationSample
 
 
