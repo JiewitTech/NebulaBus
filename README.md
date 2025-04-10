@@ -81,3 +81,5 @@ _bus.PublishAsync("NebulaBus.TestHandler", new TestMessage { Message = "Hello Wo
 
 微服务解耦 | IoT 设备指令分发 | 金融交易异步结算 | 游戏服务器状态同步
 
+项目定位: 比 MassTransit 更易扩展和轻量化的 .NET 消息中间件解决方案。
+
