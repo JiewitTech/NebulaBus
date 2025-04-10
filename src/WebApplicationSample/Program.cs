@@ -20,6 +20,7 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddNebulaBus(options =>
 {
+    options.ClusterName = "TestCluster";
     options.UseRedisStore(configuration!.GetConnectionString("RedisConn"));
     options.UseRabbitmq(rabbitmq =>
     {
