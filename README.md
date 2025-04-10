@@ -15,6 +15,7 @@
 
 注入
 ```
+//配置
 builder.Services.AddNebulaBus(options =>
 {
     options.ClusterName = "TestCluster";
@@ -27,10 +28,16 @@ builder.Services.AddNebulaBus(options =>
         rabbitmq.VirtualHost = "/";
     });
 });
+//注入订阅者
+builder.Services.AddNebulaBusHandler<TestHandlerV1, TestMessage>();
+builder.Services.AddNebulaBusHandler<TestHandlerV2, TestMessage>();
+//批量注入订阅者
+builder.Services.AddNebulaBusHandler(typeof(TestHandlerV1).Assembly);
 ```
 订阅
 
 ```
+//实现NebulaHandler<> 抽象类即可
  public class TestHandlerV1 : NebulaHandler<TestMessage>
     {
         public override string Name => "NebulaBus.TestHandler.V1";
@@ -67,6 +74,6 @@ _bus.PublishAsync("NebulaBus.TestHandler", new TestMessage { Message = "Hello Wo
         { NebulaHeader.RequestId, "8889999" },
     });
 ```
-
+示例请参考
 
 
