@@ -75,7 +75,7 @@ namespace NebulaBus.Rabbitmq
                         await channel.BasicQosAsync(0, qos.Value, false);
 
                     //Create Exchange
-                    await channel.ExchangeDeclareAsync(_rabbitmqOptions.ExchangeName, ExchangeType.Direct);
+                    await channel.ExchangeDeclareAsync(_rabbitmqOptions.ExchangeName, ExchangeType.Direct, true);
                     //Create Queue
                     await channel.QueueDeclareAsync(handler.Name, true, false, false, null);
 
