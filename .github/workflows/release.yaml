@@ -32,14 +32,14 @@ jobs:
           change_path: "src/NebulaBus"
 
       - name: Build & Pack
-        working-directory: src/NebulaBus
+        working-directory: .
         run: |
-          dotnet restore
-          dotnet build --configuration Release --no-restore
-          dotnet pack NebulaBus.csproj /p:FileVersion=${{ steps.gitversion.outputs.version }} /p:Version=${{ steps.gitversion.outputs.version }}  -p:PackageVersion=${{ steps.gitversion.outputs.version }} --output nupkgs
+          dotnet restore src/NebulaBus/NebulaBus.csproj
+          dotnet build src/NebulaBus/NebulaBus.csproj --configuration Release --no-restore
+          dotnet pack src/NebulaBus/NebulaBus.csproj /p:FileVersion=${{ steps.gitversion.outputs.version }} /p:Version=${{ steps.gitversion.outputs.version }}  -p:PackageVersion=${{ steps.gitversion.outputs.version }} --output nupkgs
 
       - name: Push to NuGet
-        working-directory: src/NebulaBus
+        working-directory: .
         run: dotnet nuget push "nupkgs/*.nupkg" --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json
 
       # - name: Create Git Tag
