@@ -8,7 +8,7 @@ namespace NebulaBus.Store
         public string Group { get; set; }
         public string Name { get; set; }
         public NebulaHeader Header { get; set; }
-        public DateTimeOffset TriggerTime { get; set; }
+        public long TriggerTime { get; set; }
         public string MessageId { get; set; }
     }
 }

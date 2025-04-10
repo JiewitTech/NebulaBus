@@ -63,7 +63,7 @@ namespace NebulaBus.Scheduler
         private static IJobDetail BuildJobDetail(DelayStoreMessage delayMessage)
         {
             var job = JobBuilder.Create<DelayMessageSendJob>()
-                .WithIdentity($"NebulaBusJob:{delayMessage.MessageId}")
+                .WithIdentity($"NebulaBusJob:{delayMessage.MessageId}.{delayMessage.Name}")
                 .UsingJobData("data", JsonConvert.SerializeObject(delayMessage))
                 .UsingJobData("messageId", delayMessage.MessageId)
                 .UsingJobData("name", delayMessage.Name)
@@ -74,16 +74,19 @@ namespace NebulaBus.Scheduler
 
         private async Task ScheduleJobFromStore(CancellationToken cancellationToken)
         {
-            var delayMessages = await _store.GetAll();
+            var delayMessages = await _store.GetAllByKeys(DateTimeOffset.Now.AddMinutes(1).ToUnixTimeSeconds());
+            if (delayMessages == null) return;
             foreach (var delayMessage in delayMessages)
             {
-                var job = BuildJobDetail(delayMessage.Value);
+                if (cancellationToken.IsCancellationRequested)
+                    return;
+                var job = BuildJobDetail(delayMessage);
                 if (await _scheduler.CheckExists(job.Key, cancellationToken))
                     continue;
-                if (delayMessage.Value.TriggerTime < DateTimeOffset.Now)
+                if (delayMessage.TriggerTime < DateTimeOffset.Now.ToUnixTimeSeconds())
                 {
                     var rightNowTrigger = TriggerBuilder.Create()
-                        .WithIdentity($"NebulaBusTrigger:{delayMessage.Key}")
+                        .WithIdentity($"NebulaBusTrigger:{delayMessage.MessageId}.{delayMessage.Name}")
                         .StartNow()
                         .Build();
                     await _scheduler.ScheduleJob(job, rightNowTrigger);
@@ -91,8 +94,8 @@ namespace NebulaBus.Scheduler
                 }
 
                 var trigger = TriggerBuilder.Create()
-                    .WithIdentity($"NebulaBusTrigger:{delayMessage.Key}")
-                    .StartAt(delayMessage.Value.TriggerTime)
+                    .WithIdentity($"NebulaBusTrigger:{delayMessage.MessageId}.{delayMessage.Name}")
+                    .StartAt(DateTimeOffset.FromUnixTimeSeconds(delayMessage.TriggerTime))
                     .Build();
                 await _scheduler.ScheduleJob(job, trigger);
             }

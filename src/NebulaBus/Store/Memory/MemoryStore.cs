@@ -1,5 +1,4 @@
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -27,9 +26,10 @@ namespace NebulaBus.Store.Memory
             await Task.CompletedTask;
         }
 
-        public async Task<Dictionary<string, DelayStoreMessage>> GetAll()
+        public async Task<DelayStoreMessage[]?> GetAllByKeys(long beforeTimestamp)
         {
-            return await Task.FromResult(_storeMessages.ToDictionary(x => x.Key, x => x.Value));
+            var result = _storeMessages.Values.ToArray();
+            return await Task.FromResult(result);
         }
 
         public bool Lock()
