@@ -72,7 +72,8 @@ namespace NebulaBus.Rabbitmq
 
                     //Create Exchange
                     await channel.ExchangeDeclareAsync(_rabbitmqOptions.ExchangeName, ExchangeType.Direct);
-                    await channel.QueueDeclareAsync(handler.Name, false, false, false, null);
+                    //Create Queue
+                    await channel.QueueDeclareAsync(handler.Name, true, false, false, null);
 
                     //Bind Group RoutingKey
                     if (!string.IsNullOrEmpty(handler.Group))
@@ -121,6 +122,7 @@ namespace NebulaBus.Rabbitmq
             {
                 Headers = new Dictionary<string, object?>()
             };
+            props.Persistent = true;
             foreach (var item in header)
                 props.Headers.Add(item.Key, item.Value);
 
