@@ -2,6 +2,7 @@
 using Newtonsoft.Json;
 using System;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 
 namespace NebulaBus
 {
@@ -15,6 +16,8 @@ namespace NebulaBus
 
         internal abstract Task Subscribe(IProcessor processor, IDelayMessageScheduler delayMessageScheduler,
             string message, NebulaHeader header);
+
+        internal abstract Task FallBackSubscribe(string message, NebulaHeader header, Exception ex);
 
         protected async Task Execute(Func<Task> operation)
         {
@@ -35,34 +38,52 @@ namespace NebulaBus
     }
 
     public abstract class NebulaHandler<T> : NebulaHandler
+        where T : class, new()
     {
         internal override async Task Subscribe(IProcessor processor, IDelayMessageScheduler delayMessageScheduler,
             string message, NebulaHeader header)
         {
-            if (string.IsNullOrEmpty(message)) return;
+            if (string.IsNullOrEmpty(message))
+            {
+                await FallBackHandler(null, header, new Exception($"message is null or empty"));
+                return;
+            }
             header[NebulaHeader.Consumer] = Environment.MachineName;
             header[NebulaHeader.Name] = Name;
             header[NebulaHeader.Group] = Group;
             var retryCount = header.GetRetryCount();
-
+            T data = null;
             try
             {
-                if (retryCount > MaxRetryCount) return;
+                if (retryCount > MaxRetryCount)
+                {
+                    return;
+                }
 
                 //首次执行若发生异常直接重试三次
                 if (retryCount == 0)
                 {
                     await Execute(async () =>
                     {
-                        var data = JsonConvert.DeserializeObject<T>(message);
-                        if (data == null) return;
+                        data = JsonConvert.DeserializeObject<T>(message);
+                        if (data == null)
+                        {
+                            await FallBackHandler(data, header, new Exception($"can not deserialize from:{message}"));
+                            return;
+                        }
+
                         await Handle(data, header);
                     });
                 }
                 else
                 {
-                    var data = JsonConvert.DeserializeObject<T>(message);
-                    if (data == null) return;
+                    data = JsonConvert.DeserializeObject<T>(message);
+                    if (data == null)
+                    {
+                        await FallBackHandler(data, header, new Exception($"can not deserialize from:{message}"));
+                        return;
+                    }
+
                     await Handle(data, header);
                 }
             }
@@ -71,7 +92,12 @@ namespace NebulaBus
                 header[NebulaHeader.Exception] = ex.ToString();
 
                 //no retry
-                if (MaxRetryCount == 0) return;
+                if (MaxRetryCount == 0)
+                {
+                    await FallBackHandler(data, header, new Exception($"can not deserialize from:{message}"));
+                    return;
+                }
+
                 header[NebulaHeader.RetryCount] = (retryCount + 1).ToString();
 
                 //First Time to retry，if no delay then send directly
@@ -96,8 +122,12 @@ namespace NebulaBus
                     return;
                 }
 
+                //out of retry count
                 if (retryCount >= MaxRetryCount)
+                {
+                    await FallBackHandler(data, header, new Exception($"can not deserialize from:{message}"));
                     return;
+                }
 
                 //Interval Retry
                 await delayMessageScheduler.Schedule(new Store.DelayStoreMessage()
@@ -112,6 +142,24 @@ namespace NebulaBus
             }
         }
 
+        internal override async Task FallBackSubscribe(string message, NebulaHeader header, Exception ex)
+        {
+            try
+            {
+                var data = JsonConvert.DeserializeObject<T>(message);
+                if (data == null) return;
+                await FallBackHandler(data, header, ex);
+            }
+            catch
+            {
+            }
+        }
+
         protected abstract Task Handle(T message, NebulaHeader header);
+
+        protected virtual async Task FallBackHandler(T handler, NebulaHeader header, Exception exception)
+        {
+            await Task.CompletedTask;
+        }
     }
 }
