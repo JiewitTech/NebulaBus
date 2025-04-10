@@ -58,6 +58,7 @@ namespace Microsoft.Extensions.DependencyInjection
 
         public static void AddNebulaBusHandler<TH, TM>(this IServiceCollection services)
             where TH : NebulaHandler<TM>
+            where TM : class, new()
         {
             services.TryAddEnumerable(ServiceDescriptor.Singleton<NebulaHandler, TH>());
         }
