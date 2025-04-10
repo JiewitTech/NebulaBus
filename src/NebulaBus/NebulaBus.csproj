@@ -6,6 +6,7 @@
     <VersionPrefix>$(GitVersion_MajorMinorPatch)</VersionPrefix>
     <VersionSuffix>$(GitVersion_PreReleaseTag)</VersionSuffix>
     <PackageVersion>$(GitVersion_SemVer.Replace('+', '-'))</PackageVersion>
+    <PackageReadmeFile>../../README.md</PackageReadmeFile>
   </PropertyGroup>
 
   <ItemGroup>
@@ -15,6 +16,7 @@
     <PackageReference Include="Quartz" Version="3.14.0" />
     <PackageReference Include="RabbitMQ.Client" Version="7.1.2" />
     <PackageReference Include="Snowflake.Core" Version="2.0.0" />
+    <None Include="../../README.md" Pack="true" PackagePath="\"/>
   </ItemGroup>
 
 </Project>

@@ -9,6 +9,7 @@ namespace WebApplicationSample.Handlers
         public override string Group => "NebulaBus.TestHandler";
         public override TimeSpan RetryDelay => TimeSpan.FromSeconds(10);
         public override int MaxRetryCount => 5;
+        public override TimeSpan RetryInterval => TimeSpan.FromSeconds(10);
 
         private readonly INebulaBus _bus;
 
