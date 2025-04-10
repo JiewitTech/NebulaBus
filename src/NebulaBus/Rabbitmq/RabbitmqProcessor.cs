@@ -69,6 +69,10 @@ namespace NebulaBus.Rabbitmq
                 foreach (var handler in _nebulaHandlers)
                 {
                     var channel = await _connection.CreateChannelAsync();
+                    var getQos = _rabbitmqOptions.GetQos?.Invoke(handler.Name, handler.Group);
+                    var qos = getQos > 0 ? getQos : _rabbitmqOptions.Qos;
+                    if (qos > 0)
+                        await channel.BasicQosAsync(0, qos.Value, false);
 
                     //Create Exchange
                     await channel.ExchangeDeclareAsync(_rabbitmqOptions.ExchangeName, ExchangeType.Direct);
