@@ -96,30 +96,39 @@ namespace NebulaBus.Scheduler
 
         private async Task ScheduleJobFromStore(CancellationToken cancellationToken)
         {
-            var delayMessages = await _store.GetAllByKeys(DateTimeOffset.Now.AddMinutes(1).ToUnixTimeSeconds());
-            if (delayMessages == null) return;
-            foreach (var delayMessage in delayMessages)
+            try
             {
-                if (cancellationToken.IsCancellationRequested)
-                    return;
-                var job = BuildJobDetail(delayMessage);
-                if (await _scheduler.CheckExists(job.Key, cancellationToken))
-                    continue;
-                if (delayMessage.TriggerTime < DateTimeOffset.Now.ToUnixTimeSeconds())
+                var delayMessages = await _store.GetAllByKeys(DateTimeOffset.Now.AddMinutes(1).ToUnixTimeSeconds());
+                if (delayMessages == null) return;
+                foreach (var delayMessage in delayMessages)
                 {
-                    var rightNowTrigger = TriggerBuilder.Create()
-                        .WithIdentity($"NebulaBusTrigger:{delayMessage.MessageId}.{delayMessage.Name}")
-                        .StartNow()
-                        .Build();
-                    await _scheduler.ScheduleJob(job, rightNowTrigger, cancellationToken);
-                    continue;
-                }
+                    if (delayMessage == null) continue;
+                    if (cancellationToken.IsCancellationRequested)
+                        return;
+                    var job = BuildJobDetail(delayMessage);
+                    if (await _scheduler.CheckExists(job.Key, cancellationToken))
+                        continue;
 
-                var trigger = TriggerBuilder.Create()
-                    .WithIdentity($"NebulaBusTrigger:{delayMessage.MessageId}.{delayMessage.Name}")
-                    .StartAt(DateTimeOffset.FromUnixTimeSeconds(delayMessage.TriggerTime))
-                    .Build();
-                await _scheduler.ScheduleJob(job, trigger, cancellationToken);
+                    if (delayMessage.TriggerTime < DateTimeOffset.Now.ToUnixTimeSeconds())
+                    {
+                        var rightNowTrigger = TriggerBuilder.Create()
+                            .WithIdentity($"NebulaBusTrigger:{delayMessage.MessageId}.{delayMessage.Name}")
+                            .StartNow()
+                            .Build();
+                        await _scheduler.ScheduleJob(job, rightNowTrigger, cancellationToken);
+                        continue;
+                    }
+
+                    var trigger = TriggerBuilder.Create()
+                        .WithIdentity($"NebulaBusTrigger:{delayMessage.MessageId}.{delayMessage.Name}")
+                        .StartAt(DateTimeOffset.FromUnixTimeSeconds(delayMessage.TriggerTime))
+                        .Build();
+                    await _scheduler.ScheduleJob(job, trigger, cancellationToken);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "ScheduleJobFromStore");
             }
         }
     }
