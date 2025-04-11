@@ -26,7 +26,7 @@ namespace NebulaBus.Store.Memory
             await Task.CompletedTask;
         }
 
-        public async Task<DelayStoreMessage[]?> GetAllByKeys(long beforeTimestamp)
+        public async Task<DelayStoreMessage[]?> Get(long beforeTimestamp)
         {
             var result = _storeMessages.Values.ToArray();
             return await Task.FromResult(result);

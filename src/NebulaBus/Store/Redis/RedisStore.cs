@@ -34,7 +34,7 @@ namespace NebulaBus.Store.Redis
             await _redisClient.HDelAsync(RedisKey, $"{delayStoreMessage.MessageId}.{delayStoreMessage.Name}");
         }
 
-        public async Task<DelayStoreMessage[]?> GetAllByKeys(long beforeTimestamp)
+        public async Task<DelayStoreMessage[]?> Get(long beforeTimestamp)
         {
             var keys = await _redisClient.ZRangeByScoreAsync(IndexRedisKey, 0, beforeTimestamp);
             if (keys == null || keys.Length == 0) return null;
