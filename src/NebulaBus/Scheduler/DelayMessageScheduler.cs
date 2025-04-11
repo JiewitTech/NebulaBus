@@ -5,6 +5,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Quartz.Spi;
 
@@ -15,11 +16,13 @@ namespace NebulaBus.Scheduler
         private readonly IStore _store;
         private IScheduler _scheduler;
         private readonly IJobFactory _jobFactory;
+        private readonly ILogger<DelayMessageScheduler> _logger;
 
         public DelayMessageScheduler(IServiceProvider serviceProvider, IStore store)
         {
             _store = store;
             _jobFactory = serviceProvider.GetRequiredKeyedService<IJobFactory>("NebulaBusJobFactory");
+            _logger = serviceProvider.GetRequiredService<ILogger<DelayMessageScheduler>>();
         }
 
         public async Task Schedule(DelayStoreMessage delayMessage)
@@ -40,7 +43,10 @@ namespace NebulaBus.Scheduler
             while (true)
             {
                 if (cancellationToken.IsCancellationRequested)
+                {
+                    _logger.LogInformation("Cancelling loop lock scheduler");
                     return;
+                }
 
                 //lock
                 var gotLock = _store.Lock();
@@ -53,7 +59,11 @@ namespace NebulaBus.Scheduler
                 while (true)
                 {
                     if (cancellationToken.IsCancellationRequested)
+                    {
+                        _logger.LogInformation("Cancelling loop scheduler");
                         return;
+                    }
+
                     await ScheduleJobFromStore(cancellationToken);
                     await Task.Delay(1000, cancellationToken);
                 }
