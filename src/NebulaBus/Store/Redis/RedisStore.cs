@@ -12,6 +12,7 @@ namespace NebulaBus.Store.Redis
 
         private readonly CSRedisClient _redisClient;
         private readonly NebulaOptions _nebulaOptions;
+        private CSRedisClientLock _redisClientLock;
 
         public RedisStore(IServiceProvider provider, NebulaOptions nebulaOptions)
         {
@@ -42,8 +43,14 @@ namespace NebulaBus.Store.Redis
 
         public bool Lock()
         {
-            var redisLock = _redisClient.Lock($"NebulaBus:{_nebulaOptions.ClusterName}.Lock", 3, true);
-            return redisLock != null;
+            _redisClientLock = _redisClient.Lock($"NebulaBus:{_nebulaOptions.ClusterName}.Lock", 3, true);
+            return _redisClientLock != null;
+        }
+
+        public void Dispose()
+        {
+            _redisClientLock?.Dispose();
+            _redisClient?.Dispose();
         }
     }
 }

@@ -1,8 +1,9 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 
 namespace NebulaBus.Store
 {
-    internal interface IStore
+    internal interface IStore : IDisposable
     {
         Task Add(DelayStoreMessage delayStoreMessage);
         Task Delete(DelayStoreMessage delayStoreMessage);
