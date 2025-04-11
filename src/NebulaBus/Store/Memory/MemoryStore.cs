@@ -36,5 +36,10 @@ namespace NebulaBus.Store.Memory
         {
             return true;
         }
+
+        public void Dispose()
+        {
+            _storeMessages.Clear();
+        }
     }
 }

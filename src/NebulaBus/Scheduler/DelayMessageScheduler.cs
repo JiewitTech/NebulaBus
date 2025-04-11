@@ -35,14 +35,26 @@ namespace NebulaBus.Scheduler
 
         public async Task StartSchedule(CancellationToken cancellationToken)
         {
+            var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            cts.Token.Register(() =>
+            {
+                try
+                {
+                    _store?.Dispose();
+                }
+                catch
+                {
+                }
+            });
+
             StdSchedulerFactory factory = new StdSchedulerFactory();
-            _scheduler = await factory.GetScheduler();
+            _scheduler = await factory.GetScheduler(cts.Token);
             _scheduler.JobFactory = _jobFactory;
-            await _scheduler.Start();
+            await _scheduler.Start(cts.Token);
 
             while (true)
             {
-                if (cancellationToken.IsCancellationRequested)
+                if (cts.IsCancellationRequested)
                 {
                     _logger.LogInformation("Cancelling loop lock scheduler");
                     return;
@@ -58,14 +70,14 @@ namespace NebulaBus.Scheduler
 
                 while (true)
                 {
-                    if (cancellationToken.IsCancellationRequested)
+                    if (cts.IsCancellationRequested)
                     {
                         _logger.LogInformation("Cancelling loop scheduler");
                         return;
                     }
 
-                    await ScheduleJobFromStore(cancellationToken);
-                    await Task.Delay(1000, cancellationToken);
+                    await ScheduleJobFromStore(cts.Token);
+                    await Task.Delay(1000, cts.Token);
                 }
             }
         }
@@ -99,7 +111,7 @@ namespace NebulaBus.Scheduler
                         .WithIdentity($"NebulaBusTrigger:{delayMessage.MessageId}.{delayMessage.Name}")
                         .StartNow()
                         .Build();
-                    await _scheduler.ScheduleJob(job, rightNowTrigger);
+                    await _scheduler.ScheduleJob(job, rightNowTrigger, cancellationToken);
                     continue;
                 }
 
@@ -107,7 +119,7 @@ namespace NebulaBus.Scheduler
                     .WithIdentity($"NebulaBusTrigger:{delayMessage.MessageId}.{delayMessage.Name}")
                     .StartAt(DateTimeOffset.FromUnixTimeSeconds(delayMessage.TriggerTime))
                     .Build();
-                await _scheduler.ScheduleJob(job, trigger);
+                await _scheduler.ScheduleJob(job, trigger, cancellationToken);
             }
         }
     }
