@@ -1,6 +1,7 @@
 ﻿using CSRedis;
 using Microsoft.Extensions.DependencyInjection;
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace NebulaBus.Store.Redis
@@ -38,7 +39,16 @@ namespace NebulaBus.Store.Redis
             var keys = await _redisClient.ZRangeByScoreAsync(IndexRedisKey, 0, beforeTimestamp);
             if (keys == null) return null;
             var result = await _redisClient.HMGetAsync<DelayStoreMessage>(RedisKey, keys!);
-            return result;
+            //排除为空的值并删除
+            for (var i = 0; i < keys.Length; i++)
+            {
+                if (result[i] == null)
+                {
+                    await _redisClient.ZRemAsync(IndexRedisKey, keys[i]);
+                    await _redisClient.HDelAsync(RedisKey, keys[i]);
+                }
+            }
+            return result.Where(x => x != null).ToArray();
         }
 
         public bool Lock()
