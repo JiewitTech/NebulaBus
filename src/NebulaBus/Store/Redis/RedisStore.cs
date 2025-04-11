@@ -37,7 +37,7 @@ namespace NebulaBus.Store.Redis
         public async Task<DelayStoreMessage[]?> GetAllByKeys(long beforeTimestamp)
         {
             var keys = await _redisClient.ZRangeByScoreAsync(IndexRedisKey, 0, beforeTimestamp);
-            if (keys == null) return null;
+            if (keys == null || keys.Length == 0) return null;
             var result = await _redisClient.HMGetAsync<DelayStoreMessage>(RedisKey, keys!);
             //排除为空的值并删除
             for (var i = 0; i < keys.Length; i++)
