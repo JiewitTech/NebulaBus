@@ -52,14 +52,8 @@ namespace NebulaBus.Scheduler
             _scheduler.JobFactory = _jobFactory;
             await _scheduler.Start(cts.Token);
 
-            while (true)
+            while (!cts.IsCancellationRequested)
             {
-                if (cts.IsCancellationRequested)
-                {
-                    _logger.LogInformation("Cancelling loop lock scheduler");
-                    return;
-                }
-
                 //lock
                 var gotLock = _store.Lock();
                 if (!gotLock)
@@ -68,14 +62,8 @@ namespace NebulaBus.Scheduler
                     continue;
                 }
 
-                while (true)
+                while (!cts.IsCancellationRequested)
                 {
-                    if (cts.IsCancellationRequested)
-                    {
-                        _logger.LogInformation("Cancelling loop scheduler");
-                        return;
-                    }
-
                     await ScheduleJobFromStore(cts.Token);
                     await Task.Delay(1000, cts.Token);
                 }

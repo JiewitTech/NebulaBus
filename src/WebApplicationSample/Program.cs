@@ -31,8 +31,8 @@ builder.Services.AddNebulaBus(options =>
     });
 });
 builder.Services.AddNebulaBusHandler(typeof(TestHandlerV1).Assembly);
-// builder.Services.AddNebulaBusHandler<TestHandlerV1, TestMessage>();
-// builder.Services.AddNebulaBusHandler<TestHandlerV2, TestMessage>();
+//builder.Services.AddNebulaBusHandler<TestHandlerV1, TestMessage>();
+//builder.Services.AddNebulaBusHandler<TestHandlerV2, TestMessage>();
 
 var app = builder.Build();
 
