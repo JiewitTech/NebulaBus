@@ -12,7 +12,7 @@ namespace NebulaBus
         public virtual TimeSpan RetryInterval => TimeSpan.FromSeconds(10);
         public virtual TimeSpan RetryDelay => TimeSpan.FromSeconds(5);
         public virtual int MaxRetryCount => 10;
-        public virtual byte ExecuteThreadCount => 1;
+        public virtual byte? ExecuteThreadCount => 1;
 
         internal abstract Task Excute(IProcessor processor, IDelayMessageScheduler delayMessageScheduler,
             string message, NebulaHeader header);

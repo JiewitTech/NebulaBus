@@ -3,18 +3,20 @@
     <Authors>javen liu</Authors>
     <Company>JiewitTech</Company>
     <RepositoryUrl>https://github.com/JiewitTech/NebulaBus.git</RepositoryUrl>
+    <PackageProjectUrl>https://github.com/JiewitTech/NebulaBus</PackageProjectUrl>
+    <Description>NebulaBus - Future oriented NET distributed event bus framework, allowing developers to focus on development</Description>
+    <PackageTags>NebulaBus enventbus</PackageTags>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageVersion>$(PackageVersion)</PackageVersion>
   </PropertyGroup>
-  
+
   <PropertyGroup>
     <TargetFramework>netstandard2.1</TargetFramework>
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="CSRedisCore" Version="3.8.804" />
     <PackageReference Include="FreeRedis" Version="1.3.6" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="8.0.0" />
     <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="8.0.0" />

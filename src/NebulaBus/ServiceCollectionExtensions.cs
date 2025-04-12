@@ -10,6 +10,7 @@ using Quartz;
 using Quartz.Spi;
 using System;
 using System.Linq;
+using Newtonsoft.Json;
 using System.Reflection;
 
 namespace Microsoft.Extensions.DependencyInjection
@@ -40,6 +41,8 @@ namespace Microsoft.Extensions.DependencyInjection
             if (!string.IsNullOrEmpty(options.RedisConnectionString))
             {
                 var freeRedisClient = new RedisClient(options.RedisConnectionString);
+                freeRedisClient.Serialize = obj => JsonConvert.SerializeObject(obj);
+                freeRedisClient.Deserialize = (json, type) => JsonConvert.DeserializeObject(json, type);
                 services.AddKeyedSingleton("NebulaBusRedis", freeRedisClient);
                 services.AddSingleton<IStore, RedisStore>();
             }

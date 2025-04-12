@@ -22,6 +22,7 @@ namespace NebulaBus.Rabbitmq
         private readonly IServiceProvider _serviceProvider;
         private bool _started;
         private readonly SemaphoreSlim _semaphore;
+        private readonly NebulaOptions _nebulaOptions;
 
         public RabbitmqProcessor(
             IServiceProvider serviceProvider,
@@ -30,6 +31,7 @@ namespace NebulaBus.Rabbitmq
             ILogger<RabbitmqProcessor> logger)
         {
             _serviceProvider = serviceProvider;
+            _nebulaOptions = nebulaOptions;
             _rabbitmqOptions = nebulaOptions.RabbitmqOptions;
             _channels = new List<IChannel>();
             _delayMessageScheduler = delayMessageScheduler;
@@ -95,7 +97,7 @@ namespace NebulaBus.Rabbitmq
                         var consumer = new AsyncEventingBasicConsumer(channel);
                         await channel.BasicConsumeAsync(handler.Name, false, consumer, cancellationToken);
 
-                        var excutor = new NebulaExecutor<ulong>(this, handler, _delayMessageScheduler);
+                        var excutor = new NebulaExecutor<ulong>(this, handler, _delayMessageScheduler,_nebulaOptions.ExecuteThreadCount);
                         excutor.Start(cancellationToken, async (tag) =>
                         {
                             await channel.BasicAckAsync(tag, false);

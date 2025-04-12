@@ -15,11 +15,11 @@ namespace NebulaBus
         private readonly IDelayMessageScheduler _delayMessageScheduler;
         private readonly SemaphoreSlim _semaphore;
 
-        public NebulaExecutor(IProcessor processor, NebulaHandler nebulaHandler, IDelayMessageScheduler delayMessageScheduler)
+        public NebulaExecutor(IProcessor processor, NebulaHandler nebulaHandler, IDelayMessageScheduler delayMessageScheduler, byte threadCount)
         {
             _processor = processor;
             _delayMessageScheduler = delayMessageScheduler;
-            _threadCount = nebulaHandler.ExecuteThreadCount;
+            _threadCount = nebulaHandler.ExecuteThreadCount > 0 ? nebulaHandler.ExecuteThreadCount.Value : threadCount;
             _handler = nebulaHandler;
             _channel = Channel.CreateUnbounded<(T, string, NebulaHeader)>();
             _semaphore = new SemaphoreSlim(1, 1);
