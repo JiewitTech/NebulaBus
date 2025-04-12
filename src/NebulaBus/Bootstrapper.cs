@@ -49,7 +49,7 @@ namespace NebulaBus
                 try
                 {
                     _cts.Token.ThrowIfCancellationRequested();
-                    await processor.Start(_cts.Token);
+                    await processor.Start(_cts.Token).ConfigureAwait(false);
                 }
                 catch (Exception ex)
                 {
@@ -58,7 +58,7 @@ namespace NebulaBus
             }
 
             //Start Store Scheduler
-            await _delayMessageScheduler.StartSchedule(_cts.Token);
+            await _delayMessageScheduler!.StartSchedule(_cts.Token).ConfigureAwait(false);
         }
 
         public override async Task StopAsync(CancellationToken cancellationToken)

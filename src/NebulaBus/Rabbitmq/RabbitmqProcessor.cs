@@ -2,9 +2,9 @@
 using Microsoft.Extensions.Logging;
 using NebulaBus.Scheduler;
 using RabbitMQ.Client;
-using RabbitMQ.Client.Events;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -55,70 +55,11 @@ namespace NebulaBus.Rabbitmq
         {
             try
             {
-                ConnectionFactory factory = new ConnectionFactory();
-                factory.UserName = _rabbitmqOptions.UserName;
-                factory.Password = _rabbitmqOptions.Password;
-                factory.VirtualHost = _rabbitmqOptions.VirtualHost;
-                factory.HostName = _rabbitmqOptions.HostName;
-                factory.AutomaticRecoveryEnabled = true;
-                factory.ClientProvidedName = $"NebulaBus:{Environment.MachineName}";
-
-                _connection = await factory.CreateConnectionAsync();
-
                 //Sender Channel
-                _senderChannel = await _connection.CreateChannelAsync();
+                _senderChannel = await CreateSenderChannel();
                 _channels.Add(_senderChannel);
 
-                var _nebulaHandlers = _serviceProvider.GetServices<NebulaHandler>();
-                if (_nebulaHandlers != null)
-                {
-                    foreach (var handler in _nebulaHandlers)
-                    {
-                        var channel = await _connection.CreateChannelAsync();
-                        var getQos = _rabbitmqOptions.GetQos?.Invoke(handler.Name, handler.Group);
-                        var qos = getQos > 0 ? getQos : _rabbitmqOptions.Qos;
-                        if (qos > 0)
-                            await channel.BasicQosAsync(0, qos.Value, false);
-
-                        //Create Exchange
-                        await channel.ExchangeDeclareAsync(_rabbitmqOptions.ExchangeName, ExchangeType.Direct, true);
-                        //Create Queue
-                        await channel.QueueDeclareAsync(handler.Name, true, false, false, null);
-
-                        //Bind Group RoutingKey
-                        if (!string.IsNullOrEmpty(handler.Group))
-                            await channel.QueueBindAsync(handler.Name, _rabbitmqOptions.ExchangeName, handler.Group, null);
-
-                        //Bind Name RoutingKey
-                        if (!string.IsNullOrEmpty(handler.Name))
-                            await channel.QueueBindAsync(handler.Name, _rabbitmqOptions.ExchangeName, handler.Name, null);
-
-                        _channels.Add(channel);
-                        var consumer = new AsyncEventingBasicConsumer(channel);
-                        await channel.BasicConsumeAsync(handler.Name, false, consumer, cancellationToken);
-
-                        var excutor = new NebulaExecutor<ulong>(this, handler, _delayMessageScheduler,_nebulaOptions.ExecuteThreadCount);
-                        excutor.Start(cancellationToken, async (tag) =>
-                        {
-                            await channel.BasicAckAsync(tag, false);
-                        });
-                        consumer.ReceivedAsync += async (ch, ea) =>
-                        {
-                            var body = ea.Body.ToArray();
-                            var message = Encoding.UTF8.GetString(body);
-                            var header = new NebulaHeader();
-                            if (ea.BasicProperties.Headers != null)
-                            {
-                                foreach (var item in ea.BasicProperties.Headers!)
-                                {
-                                    if (item.Value is byte[] bytes) header.Add(item.Key, Encoding.UTF8.GetString(bytes));
-                                }
-                            }
-
-                            await excutor.Enqueue(ea.DeliveryTag, message, header);
-                        };
-                    }
-                }
+                await RegisteConsumer(cancellationToken);
                 _started = true;
             }
             catch (Exception ex)
@@ -153,6 +94,103 @@ namespace NebulaBus.Rabbitmq
             finally
             {
                 _semaphore.Release();
+            }
+        }
+
+        private async Task<IConnection> GetConnection()
+        {
+            if (_connection == null || !_connection.IsOpen)
+            {
+                var connectionFactory = new ConnectionFactory()
+                {
+                    HostName = _rabbitmqOptions.HostName,
+                    UserName = _rabbitmqOptions.UserName,
+                    Password = _rabbitmqOptions.Password,
+                    VirtualHost = _rabbitmqOptions.VirtualHost,
+                    AutomaticRecoveryEnabled = true,
+                    ClientProvidedName = $"NebulaBus:{Environment.MachineName}"
+                };
+                _connection = await connectionFactory.CreateConnectionAsync();
+            }
+            return _connection;
+        }
+
+        private async Task<IChannel> CreateSenderChannel()
+        {
+            var connection = await GetConnection();
+            if (_senderChannel == null || !_senderChannel.IsOpen)
+                _senderChannel = await connection.CreateChannelAsync();
+            return _senderChannel;
+        }
+
+        private async Task<IChannel> CreateNewChannel()
+        {
+            await _semaphore.WaitAsync();
+            try
+            {
+                var connection = await GetConnection();
+                return await connection.CreateChannelAsync();
+            }
+            finally
+            {
+                _semaphore.Release();
+            }
+        }
+
+        private async Task RegisteConsumer(CancellationToken cancellationToken)
+        {
+            var _nebulaHandlers = _serviceProvider.GetServices<NebulaHandler>();
+            if (_nebulaHandlers == null) return;
+
+            var handlerInfos = _nebulaHandlers.Select(x => new HandlerInfo()
+            {
+                Name = x.Name,
+                Group = x.Group,
+                ExcuteThreadCount = x.ExecuteThreadCount.HasValue ? x.ExecuteThreadCount.Value : _nebulaOptions.ExecuteThreadCount,
+                Type = x.GetType()
+            });
+
+            foreach (var info in handlerInfos)
+            {
+                var getQos = _rabbitmqOptions.GetQos?.Invoke(info.Name, info.Group);
+                var qos = getQos > 0 ? getQos : _rabbitmqOptions.Qos;
+
+                await RegisteConsumerByConfig(info, qos.Value, cancellationToken);
+            }
+        }
+
+        private async Task RegisteConsumerByConfig(HandlerInfo handlerInfo, ushort qos, CancellationToken cancellationToken)
+        {
+            //每个handler创建一个channel 一个consumer
+            for (byte i = 0; i < handlerInfo.ExcuteThreadCount; i++)
+            {
+                var channel = await CreateNewChannel();
+                _channels.Add(channel);
+
+                if (qos > 0)
+                    await channel.BasicQosAsync(0, qos, false);
+
+                //Create Exchange
+                await channel.ExchangeDeclareAsync(_rabbitmqOptions.ExchangeName, ExchangeType.Direct, true);
+                //Create Queue
+                await channel.QueueDeclareAsync(handlerInfo.Name, true, false, false, null);
+
+                //Bind Group RoutingKey
+                if (!string.IsNullOrEmpty(handlerInfo.Group))
+                    await channel.QueueBindAsync(handlerInfo.Name, _rabbitmqOptions.ExchangeName, handlerInfo.Group, null);
+
+                //Bind Name RoutingKey
+                if (!string.IsNullOrEmpty(handlerInfo.Name))
+                    await channel.QueueBindAsync(handlerInfo.Name, _rabbitmqOptions.ExchangeName, handlerInfo.Name, null);
+
+                //Create Consumer
+                var consumer = new NebulaRabbitmqConsumer(channel, qos, async (message, header) =>
+                {
+                    var handler = _serviceProvider.GetService(handlerInfo.Type) as NebulaHandler;
+                    if (handler == null) return;
+                    await handler.Excute(this, _delayMessageScheduler!, message, header);
+                });
+                await channel.BasicConsumeAsync(handlerInfo.Name, false, consumer, cancellationToken);
             }
         }
     }
