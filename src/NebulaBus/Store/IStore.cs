@@ -7,7 +7,7 @@ namespace NebulaBus.Store
     {
         Task Add(DelayStoreMessage delayStoreMessage);
         Task Delete(DelayStoreMessage delayStoreMessage);
-        Task<DelayStoreMessage[]?> GetAllByKeys(long beforeTimestamp);
+        Task<DelayStoreMessage[]?> Get(long beforeTimestamp);
         bool Lock();
     }
 }

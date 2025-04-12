@@ -98,7 +98,7 @@ namespace NebulaBus.Scheduler
         {
             try
             {
-                var delayMessages = await _store.GetAllByKeys(DateTimeOffset.Now.AddMinutes(1).ToUnixTimeSeconds());
+                var delayMessages = await _store.Get(DateTimeOffset.Now.AddMinutes(1).ToUnixTimeSeconds());
                 if (delayMessages == null) return;
                 foreach (var delayMessage in delayMessages)
                 {

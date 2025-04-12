@@ -21,6 +21,8 @@ namespace NebulaBus.Rabbitmq
         private readonly ILogger<RabbitmqProcessor> _logger;
         private readonly IServiceProvider _serviceProvider;
         private bool _started;
+        private readonly SemaphoreSlim _semaphore;
+        private readonly NebulaOptions _nebulaOptions;
 
         public RabbitmqProcessor(
             IServiceProvider serviceProvider,
@@ -29,10 +31,12 @@ namespace NebulaBus.Rabbitmq
             ILogger<RabbitmqProcessor> logger)
         {
             _serviceProvider = serviceProvider;
+            _nebulaOptions = nebulaOptions;
             _rabbitmqOptions = nebulaOptions.RabbitmqOptions;
             _channels = new List<IChannel>();
             _delayMessageScheduler = delayMessageScheduler;
             _logger = logger;
+            _semaphore = new SemaphoreSlim(1, 1);
         }
 
         public void Dispose()
@@ -93,6 +97,11 @@ namespace NebulaBus.Rabbitmq
                         var consumer = new AsyncEventingBasicConsumer(channel);
                         await channel.BasicConsumeAsync(handler.Name, false, consumer, cancellationToken);
 
+                        var excutor = new NebulaExecutor<ulong>(this, handler, _delayMessageScheduler,_nebulaOptions.ExecuteThreadCount);
+                        excutor.Start(cancellationToken, async (tag) =>
+                        {
+                            await channel.BasicAckAsync(tag, false);
+                        });
                         consumer.ReceivedAsync += async (ch, ea) =>
                         {
                             var body = ea.Body.ToArray();
@@ -106,8 +115,7 @@ namespace NebulaBus.Rabbitmq
                                 }
                             }
 
-                            await handler.Subscribe(this, _delayMessageScheduler, message, header);
-                            await channel.BasicAckAsync(ea.DeliveryTag, false);
+                            await excutor.Enqueue(ea.DeliveryTag, message, header);
                         };
                     }
                 }
@@ -121,23 +129,31 @@ namespace NebulaBus.Rabbitmq
 
         public async Task Publish(string routingKey, string message, NebulaHeader header)
         {
-            if (!_started)
+            await _semaphore.WaitAsync();
+            try
             {
-                _logger.LogError($"Processor {this.GetType().Name} not started");
-                return;
+                if (!_started)
+                {
+                    _logger.LogError($"Processor {this.GetType().Name} not started");
+                    return;
+                }
+
+                byte[] messageBodyBytes = Encoding.UTF8.GetBytes(message);
+                var props = new BasicProperties()
+                {
+                    Headers = new Dictionary<string, object?>()
+                };
+                props.Persistent = true;
+                foreach (var item in header)
+                    props.Headers.Add(item.Key, item.Value);
+
+                await _senderChannel.BasicPublishAsync(_rabbitmqOptions.ExchangeName, routingKey, false, props,
+                    messageBodyBytes);
             }
-
-            byte[] messageBodyBytes = Encoding.UTF8.GetBytes(message);
-            var props = new BasicProperties()
+            finally
             {
-                Headers = new Dictionary<string, object?>()
-            };
-            props.Persistent = true;
-            foreach (var item in header)
-                props.Headers.Add(item.Key, item.Value);
-
-            await _senderChannel.BasicPublishAsync(_rabbitmqOptions.ExchangeName, routingKey, false, props,
-                messageBodyBytes);
+                _semaphore.Release();
+            }
         }
     }
 }

@@ -9,6 +9,7 @@ namespace NebulaBus
         internal RabbitmqOptions RabbitmqOptions { get; }
         internal string RedisConnectionString { get; set; }
         public string ClusterName { get; set; } = $"{Assembly.GetEntryAssembly().GetName().Name}";
+        public byte ExecuteThreadCount { get; set; } = 1;
 
         public NebulaOptions()
         {

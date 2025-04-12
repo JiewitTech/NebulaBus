@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.DependencyInjection.Extensions;
+﻿using FreeRedis;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using NebulaBus;
 using NebulaBus.Rabbitmq;
 using NebulaBus.Scheduler;
@@ -9,6 +10,7 @@ using Quartz;
 using Quartz.Spi;
 using System;
 using System.Linq;
+using Newtonsoft.Json;
 using System.Reflection;
 
 namespace Microsoft.Extensions.DependencyInjection
@@ -38,8 +40,10 @@ namespace Microsoft.Extensions.DependencyInjection
             //Delay Message Store
             if (!string.IsNullOrEmpty(options.RedisConnectionString))
             {
-                var redisClient = new CSRedis.CSRedisClient(options.RedisConnectionString);
-                services.AddKeyedSingleton("NebulaBusRedis", redisClient);
+                var freeRedisClient = new RedisClient(options.RedisConnectionString);
+                freeRedisClient.Serialize = obj => JsonConvert.SerializeObject(obj);
+                freeRedisClient.Deserialize = (json, type) => JsonConvert.DeserializeObject(json, type);
+                services.AddKeyedSingleton("NebulaBusRedis", freeRedisClient);
                 services.AddSingleton<IStore, RedisStore>();
             }
             else

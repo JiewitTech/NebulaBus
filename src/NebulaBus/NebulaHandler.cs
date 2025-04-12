@@ -2,7 +2,6 @@
 using Newtonsoft.Json;
 using System;
 using System.Threading.Tasks;
-using Microsoft.Extensions.Logging;
 
 namespace NebulaBus
 {
@@ -13,13 +12,14 @@ namespace NebulaBus
         public virtual TimeSpan RetryInterval => TimeSpan.FromSeconds(10);
         public virtual TimeSpan RetryDelay => TimeSpan.FromSeconds(5);
         public virtual int MaxRetryCount => 10;
+        public virtual byte? ExecuteThreadCount => 1;
 
-        internal abstract Task Subscribe(IProcessor processor, IDelayMessageScheduler delayMessageScheduler,
+        internal abstract Task Excute(IProcessor processor, IDelayMessageScheduler delayMessageScheduler,
             string message, NebulaHeader header);
 
         internal abstract Task FallBackSubscribe(string message, NebulaHeader header, Exception ex);
 
-        protected async Task Execute(Func<Task> operation)
+        protected async Task DirectRetryExecute(Func<Task> operation)
         {
             for (int attempt = 1; attempt <= 4; attempt++)
             {
@@ -40,7 +40,7 @@ namespace NebulaBus
     public abstract class NebulaHandler<T> : NebulaHandler
         where T : class, new()
     {
-        internal override async Task Subscribe(IProcessor processor, IDelayMessageScheduler delayMessageScheduler,
+        internal override async Task Excute(IProcessor processor, IDelayMessageScheduler delayMessageScheduler,
             string message, NebulaHeader header)
         {
             if (string.IsNullOrEmpty(message))
@@ -63,7 +63,7 @@ namespace NebulaBus
                 //首次执行若发生异常直接重试三次
                 if (retryCount == 0)
                 {
-                    await Execute(async () =>
+                    await DirectRetryExecute(async () =>
                     {
                         data = JsonConvert.DeserializeObject<T>(message);
                         if (data == null)
