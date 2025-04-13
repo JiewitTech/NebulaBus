@@ -90,7 +90,7 @@ namespace NebulaBus
                 //no retry
                 if (MaxRetryCount == 0)
                 {
-                    await FallBackHandler(data, header, new Exception($"can not deserialize from:{message}"));
+                    await FallBackHandler(data, header, ex);
                     return;
                 }
 
@@ -121,7 +121,7 @@ namespace NebulaBus
                 //out of retry count
                 if (retryCount >= MaxRetryCount)
                 {
-                    await FallBackHandler(data, header, new Exception($"Exceeded the maximum retry count of {MaxRetryCount} times"));
+                    await FallBackHandler(data, header, ex);
                     return;
                 }
 
