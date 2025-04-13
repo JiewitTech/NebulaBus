@@ -41,6 +41,7 @@ namespace NebulaBus.Rabbitmq
 
         public void Dispose()
         {
+            _senderChannel?.Dispose();
             foreach (var channel in _channels)
             {
                 channel.CloseAsync().Wait();
@@ -57,14 +58,13 @@ namespace NebulaBus.Rabbitmq
             {
                 //Sender Channel
                 _senderChannel = await CreateNewChannel();
-                _channels.Add(_senderChannel);
 
                 await RegisteConsumer(cancellationToken);
                 _started = true;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"Processor {this.GetType().Name} start failed");
+                _logger.LogError(ex, $"Processor RabbitmqProcessor start failed");
             }
         }
 
@@ -75,12 +75,21 @@ namespace NebulaBus.Rabbitmq
             {
                 if (!_started)
                 {
-                    _logger.LogError($"Processor {this.GetType().Name} not started");
+                    _logger.LogError($"Processor RabbitmqProcessor not started");
                     return;
                 }
 
+                if (_senderChannel == null || _senderChannel.IsOpen)
+                    _senderChannel?.Dispose();
+
+                _senderChannel = await CreateNewChannel();
+
                 var jsonBytes = JsonSerializer.SerializeToUtf8Bytes(message, _nebulaOptions.JsonSerializerOptions);
                 await PublishByChannel(_senderChannel, routingKey, jsonBytes, header);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Processor RabbitmqProcessor publish message to {routingKey} failed");
             }
             finally
             {
