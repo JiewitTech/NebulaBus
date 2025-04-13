@@ -90,6 +90,7 @@ namespace NebulaBus.Rabbitmq
             catch (Exception ex)
             {
                 _logger.LogError(ex, $"Processor RabbitmqProcessor publish message to {routingKey} failed");
+                throw ex;
             }
             finally
             {
@@ -189,26 +190,20 @@ namespace NebulaBus.Rabbitmq
 
         public async Task PublishByChannel(IChannel channel, string routingKey, ReadOnlyMemory<byte> message, NebulaHeader header)
         {
-            try
+            if (!_started)
             {
-                if (!_started)
-                {
-                    _logger.LogError($"Processor {this.GetType().Name} not started");
-                    return;
-                }
-
-                var props = new BasicProperties()
-                {
-                    Headers = header.ToDictionary(x => x.Key, (x) => (object?)x.Value),
-                    Persistent = true,
-                    ContentType = "application/json"
-                };
-
-                await channel.BasicPublishAsync(_rabbitmqOptions.ExchangeName, routingKey, false, props, message);
+                _logger.LogError($"Processor {this.GetType().Name} not started");
+                return;
             }
-            finally
+
+            var props = new BasicProperties()
             {
-            }
+                Headers = header.ToDictionary(x => x.Key, (x) => (object?)x.Value),
+                Persistent = true,
+                ContentType = "application/json"
+            };
+
+            await channel.BasicPublishAsync(_rabbitmqOptions.ExchangeName, routingKey, false, props, message);
         }
     }
 }
