@@ -1,10 +1,10 @@
-﻿using NebulaBus.Store;
+﻿using Microsoft.Extensions.Logging;
+using NebulaBus.Store;
 using Quartz;
 using System;
 using System.Collections.Generic;
+using System.Text.Json;
 using System.Threading.Tasks;
-using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
 
 namespace NebulaBus.Scheduler
 {
@@ -13,13 +13,16 @@ namespace NebulaBus.Scheduler
         private readonly IStore _store;
         private readonly IEnumerable<IProcessor> _processors;
         private readonly ILogger<DelayMessageSendJob> _logger;
+        private readonly JsonSerializerOptions _serializerOptions;
 
         public DelayMessageSendJob(IStore store, IEnumerable<IProcessor> processors,
+            NebulaOptions nebulaOptions,
             ILogger<DelayMessageSendJob> logger)
         {
             _store = store;
             _processors = processors;
             _logger = logger;
+            _serializerOptions = nebulaOptions.JsonSerializerOptions;
         }
 
         public async Task Execute(IJobExecutionContext context)
@@ -30,7 +33,8 @@ namespace NebulaBus.Scheduler
             try
             {
                 var data = context.JobDetail.JobDataMap.GetString("data");
-                var messageData = JsonConvert.DeserializeObject<DelayStoreMessage>(data!);
+                if (string.IsNullOrEmpty(data)) return;
+                var messageData = JsonSerializer.Deserialize<DelayStoreMessage>(data, _serializerOptions);
                 if (messageData == null) return;
                 foreach (var processor in _processors)
                 {

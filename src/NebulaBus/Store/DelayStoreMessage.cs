@@ -4,7 +4,7 @@ namespace NebulaBus.Store
 {
     internal class DelayStoreMessage
     {
-        public string Message { get; set; }
+        public object Message { get; set; }
         public string Group { get; set; }
         public string Name { get; set; }
         public NebulaHeader Header { get; set; }

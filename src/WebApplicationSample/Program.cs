@@ -1,9 +1,7 @@
-using System;
 using WebApplicationSample.Handlers;
-using WebApplicationSample.Messages;
 
 var builder = WebApplication.CreateBuilder(args);
-builder.WebHost.UseUrls("http://*:0");
+builder.WebHost.UseUrls("http://*:55895");
 builder.Logging.AddConsole();
 var environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
 

@@ -1,13 +1,13 @@
-﻿using NebulaBus.Store;
+﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using NebulaBus.Store;
 using Quartz;
 using Quartz.Impl;
+using Quartz.Spi;
 using System;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
-using Quartz.Spi;
 
 namespace NebulaBus.Scheduler
 {
@@ -17,12 +17,14 @@ namespace NebulaBus.Scheduler
         private IScheduler _scheduler;
         private readonly IJobFactory _jobFactory;
         private readonly ILogger<DelayMessageScheduler> _logger;
+        private readonly JsonSerializerOptions _serializerOptions;
 
         public DelayMessageScheduler(IServiceProvider serviceProvider, IStore store)
         {
             _store = store;
             _jobFactory = serviceProvider.GetRequiredKeyedService<IJobFactory>("NebulaBusJobFactory");
             _logger = serviceProvider.GetRequiredService<ILogger<DelayMessageScheduler>>();
+            _serializerOptions = serviceProvider.GetRequiredService<NebulaOptions>().JsonSerializerOptions;
         }
 
         public async Task Schedule(DelayStoreMessage delayMessage)
@@ -70,11 +72,11 @@ namespace NebulaBus.Scheduler
             }
         }
 
-        private static IJobDetail BuildJobDetail(DelayStoreMessage delayMessage)
+        private IJobDetail BuildJobDetail(DelayStoreMessage delayMessage)
         {
             var job = JobBuilder.Create<DelayMessageSendJob>()
                 .WithIdentity($"NebulaBusJob:{delayMessage.MessageId}.{delayMessage.Name}")
-                .UsingJobData("data", JsonConvert.SerializeObject(delayMessage))
+                .UsingJobData("data", JsonSerializer.Serialize(delayMessage, _serializerOptions))
                 .UsingJobData("messageId", delayMessage.MessageId)
                 .UsingJobData("name", delayMessage.Name)
                 .UsingJobData("requestId", delayMessage.Header[NebulaHeader.RequestId])

@@ -1,6 +1,7 @@
 ﻿using NebulaBus.Rabbitmq;
 using System;
 using System.Reflection;
+using System.Text.Json;
 
 namespace NebulaBus
 {
@@ -9,7 +10,8 @@ namespace NebulaBus
         internal RabbitmqOptions RabbitmqOptions { get; }
         internal string RedisConnectionString { get; set; }
         public string ClusterName { get; set; } = $"{Assembly.GetEntryAssembly().GetName().Name}";
-        public byte ExecuteThreadCount { get; set; } = 1;
+        public byte ExecuteThreadCount { get; set; } = (byte)Environment.ProcessorCount;
+        public JsonSerializerOptions JsonSerializerOptions { get; set; } = new JsonSerializerOptions();
 
         public NebulaOptions()
         {

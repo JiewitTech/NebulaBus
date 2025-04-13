@@ -1,6 +1,7 @@
+using MessageLibrary;
 using Microsoft.AspNetCore.Mvc;
 using NebulaBus;
-using WebApplicationSample.Messages;
+using WebApplicationSample.Handlers;
 
 namespace WebApplicationSample.Controllers
 {
@@ -33,11 +34,11 @@ namespace WebApplicationSample.Controllers
                     { NebulaHeader.RequestId, "8889999" },
                 });
             return Enumerable.Range(1, 5).Select(index => new WeatherForecast
-                {
-                    Date = DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-                    TemperatureC = Random.Shared.Next(-20, 55),
-                    Summary = Summaries[Random.Shared.Next(Summaries.Length)]
-                })
+            {
+                Date = DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
+                TemperatureC = Random.Shared.Next(-20, 55),
+                Summary = Summaries[Random.Shared.Next(Summaries.Length)]
+            })
                 .ToArray();
         }
 
@@ -48,11 +49,11 @@ namespace WebApplicationSample.Controllers
             _bus.PublishAsync(TimeSpan.FromSeconds(5), "NebulaBus.TestHandler",
                 new TestMessage { Message = "Hello World" });
             return Enumerable.Range(1, 5).Select(index => new WeatherForecast
-                {
-                    Date = DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-                    TemperatureC = Random.Shared.Next(-20, 55),
-                    Summary = Summaries[Random.Shared.Next(Summaries.Length)]
-                })
+            {
+                Date = DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
+                TemperatureC = Random.Shared.Next(-20, 55),
+                Summary = Summaries[Random.Shared.Next(Summaries.Length)]
+            })
                 .ToArray();
         }
 
@@ -62,11 +63,11 @@ namespace WebApplicationSample.Controllers
             _logger.LogInformation($"{DateTime.Now} Start send Message");
             _bus.PublishAsync("NebulaBus.TestHandler.V1", new TestMessage { Message = "Hello World" });
             return Enumerable.Range(1, 5).Select(index => new WeatherForecast
-                {
-                    Date = DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-                    TemperatureC = Random.Shared.Next(-20, 55),
-                    Summary = Summaries[Random.Shared.Next(Summaries.Length)]
-                })
+            {
+                Date = DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
+                TemperatureC = Random.Shared.Next(-20, 55),
+                Summary = Summaries[Random.Shared.Next(Summaries.Length)]
+            })
                 .ToArray();
         }
 
@@ -82,6 +83,19 @@ namespace WebApplicationSample.Controllers
                 TemperatureC = Random.Shared.Next(-20, 55),
                 Summary = Summaries[Random.Shared.Next(Summaries.Length)]
             }).ToArray();
+        }
+
+        [HttpGet("StressTest")]
+        public async Task StressTest()
+        {
+            _logger.LogInformation($"{DateTime.Now} Start send StressTest Message");
+
+            var tasks = new List<Task>();
+            for (int i = 0; i < 2000; i++)
+            {
+                tasks.Add(_bus.PublishAsync("NebulaBus.TestHandler.V4", new TestMessage { Message = $"StressTest Message{i}" }));
+            }
+            await Task.WhenAll(tasks);
         }
     }
 }

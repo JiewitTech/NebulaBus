@@ -1,10 +1,10 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using NebulaBus.Scheduler;
 using NebulaBus.Store;
-using Newtonsoft.Json;
 using Snowflake.Core;
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 using System.Threading.Tasks;
 
 namespace NebulaBus
@@ -30,7 +30,7 @@ namespace NebulaBus
             var header = BuildNebulaHeader<T>(nameOrGroup);
             foreach (var processor in _processors)
             {
-                await processor.Publish(nameOrGroup, JsonConvert.SerializeObject(message), header);
+                await processor.Publish(nameOrGroup, message, header);
             }
         }
 
@@ -40,7 +40,7 @@ namespace NebulaBus
             var header = BuildNebulaHeader<T>(nameOrGroup, headers);
             foreach (var processor in _processors)
             {
-                await processor.Publish(nameOrGroup, JsonConvert.SerializeObject(message), header);
+                await processor.Publish(nameOrGroup, message, header);
             }
         }
 
@@ -53,7 +53,7 @@ namespace NebulaBus
                 MessageId = header[NebulaHeader.MessageId]!,
                 Group = nameOrGroup,
                 Header = header,
-                Message = JsonConvert.SerializeObject(message),
+                Message = message,
                 Name = nameOrGroup,
                 TriggerTime = DateTimeOffset.Now.AddSeconds(delay.TotalSeconds).ToUnixTimeSeconds()
             });
@@ -68,7 +68,7 @@ namespace NebulaBus
                 MessageId = header[NebulaHeader.MessageId]!,
                 Group = nameOrGroup,
                 Header = header,
-                Message = JsonConvert.SerializeObject(message),
+                Message = message,
                 Name = nameOrGroup,
                 TriggerTime = DateTimeOffset.Now.AddSeconds(delay.TotalSeconds).ToUnixTimeSeconds()
             });
@@ -81,7 +81,7 @@ namespace NebulaBus
             var header = new NebulaHeader()
             {
                 { NebulaHeader.MessageType, typeof(T).ToString() },
-                { NebulaHeader.Sender, Environment.MachineName },
+                { NebulaHeader.Sender, $"{Environment.MachineName}.{Assembly.GetEntryAssembly().GetName().Name}" },
                 { NebulaHeader.SendTimeStamp, DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString() },
                 { NebulaHeader.MessageId, newId },
                 { NebulaHeader.RequestId, newId },
@@ -95,7 +95,7 @@ namespace NebulaBus
             var newId = _idWorker.NextId().ToString();
             var header = new NebulaHeader(headers);
             header[NebulaHeader.MessageType] = typeof(T).ToString();
-            header[NebulaHeader.Sender] = Environment.MachineName;
+            header[NebulaHeader.Sender] = $"{Environment.MachineName}.{Assembly.GetEntryAssembly().GetName().Name}";
             header[NebulaHeader.SendTimeStamp] = DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString();
             header[NebulaHeader.MessageId] = newId;
             if (string.IsNullOrEmpty(header[NebulaHeader.RequestId]))
