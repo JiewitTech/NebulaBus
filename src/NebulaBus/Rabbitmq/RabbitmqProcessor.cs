@@ -5,7 +5,7 @@ using RabbitMQ.Client;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -68,7 +68,7 @@ namespace NebulaBus.Rabbitmq
             }
         }
 
-        public async Task Publish(string routingKey, string message, NebulaHeader header)
+        public async Task Publish(string routingKey, object message, NebulaHeader header)
         {
             await _semaphore.WaitAsync();
             try
@@ -79,17 +79,14 @@ namespace NebulaBus.Rabbitmq
                     return;
                 }
 
-                byte[] messageBodyBytes = Encoding.UTF8.GetBytes(message);
+                var jsonBytes = JsonSerializer.SerializeToUtf8Bytes(message, _nebulaOptions.JsonSerializerOptions);
                 var props = new BasicProperties()
                 {
-                    Headers = new Dictionary<string, object?>()
+                    Headers = header.ToDictionary(x => x.Key, (x) => (object?)x.Value),
+                    Persistent = true,
+                    ContentType = "application/json"
                 };
-                props.Persistent = true;
-                foreach (var item in header)
-                    props.Headers.Add(item.Key, item.Value);
-
-                await _senderChannel.BasicPublishAsync(_rabbitmqOptions.ExchangeName, routingKey, false, props,
-                    messageBodyBytes);
+                await _senderChannel.BasicPublishAsync(_rabbitmqOptions.ExchangeName, routingKey, false, props, jsonBytes);
             }
             finally
             {
@@ -188,9 +185,36 @@ namespace NebulaBus.Rabbitmq
                 {
                     var handler = _serviceProvider.GetService(handlerInfo.Type) as NebulaHandler;
                     if (handler == null) return;
-                    await handler.Excute(this, _delayMessageScheduler!, message, header);
+                    await handler.Excute(_delayMessageScheduler!, message, header, _nebulaOptions.JsonSerializerOptions, (routingKey, message, header) =>
+                    {
+                        return PublishByChannel(channel, routingKey, message, header);
+                    });
                 });
                 await channel.BasicConsumeAsync(handlerInfo.Name, false, consumer, cancellationToken);
+            }
+        }
+
+        public async Task PublishByChannel(IChannel channel, string routingKey, ReadOnlyMemory<byte> message, NebulaHeader header)
+        {
+            try
+            {
+                if (!_started)
+                {
+                    _logger.LogError($"Processor {this.GetType().Name} not started");
+                    return;
+                }
+
+                var props = new BasicProperties()
+                {
+                    Headers = header.ToDictionary(x => x.Key, (x) => (object?)x.Value),
+                    Persistent = true,
+                    ContentType = "application/json"
+                };
+
+                await channel.BasicPublishAsync(_rabbitmqOptions.ExchangeName, routingKey, false, props, message);
+            }
+            finally
+            {
             }
         }
     }

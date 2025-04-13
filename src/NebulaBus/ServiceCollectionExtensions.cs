@@ -6,12 +6,12 @@ using NebulaBus.Scheduler;
 using NebulaBus.Store;
 using NebulaBus.Store.Memory;
 using NebulaBus.Store.Redis;
-using Newtonsoft.Json;
 using Quartz;
 using Quartz.Spi;
 using System;
 using System.Linq;
 using System.Reflection;
+using System.Text.Json;
 
 namespace Microsoft.Extensions.DependencyInjection
 {
@@ -41,8 +41,8 @@ namespace Microsoft.Extensions.DependencyInjection
             if (!string.IsNullOrEmpty(options.RedisConnectionString))
             {
                 var freeRedisClient = new RedisClient(options.RedisConnectionString);
-                freeRedisClient.Serialize = obj => JsonConvert.SerializeObject(obj);
-                freeRedisClient.Deserialize = (json, type) => JsonConvert.DeserializeObject(json, type);
+                freeRedisClient.Serialize = obj => JsonSerializer.Serialize(obj, options.JsonSerializerOptions);
+                freeRedisClient.Deserialize = (json, type) => JsonSerializer.Deserialize(json, type, options.JsonSerializerOptions);
                 services.AddKeyedSingleton("NebulaBusRedis", freeRedisClient);
                 services.AddSingleton<IStore, RedisStore>();
             }

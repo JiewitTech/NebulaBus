@@ -1,6 +1,6 @@
+using MessageLibrary;
 using Microsoft.AspNetCore.Mvc;
 using NebulaBus;
-using WebApplicationSample.Messages;
 
 namespace WebApplicationSample.Controllers
 {

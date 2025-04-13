@@ -8,15 +8,14 @@ namespace NebulaBus.Rabbitmq
 {
     internal class NebulaRabbitmqConsumer : AsyncDefaultBasicConsumer
     {
-        private readonly Func<string, NebulaHeader, Task> _excute;
-        public NebulaRabbitmqConsumer(IChannel channel, int prefetchSize, Func<string, NebulaHeader, Task> excute) : base(channel)
+        private readonly Func<ReadOnlyMemory<byte>, NebulaHeader, Task> _excute;
+        public NebulaRabbitmqConsumer(IChannel channel, int prefetchSize, Func<ReadOnlyMemory<byte>, NebulaHeader, Task> excute) : base(channel)
         {
             _excute = excute;
         }
 
         public override async Task HandleBasicDeliverAsync(string consumerTag, ulong deliveryTag, bool redelivered, string exchange, string routingKey, IReadOnlyBasicProperties properties, ReadOnlyMemory<byte> body, CancellationToken cancellationToken = default)
         {
-            var message = Encoding.UTF8.GetString(body.Span);
             var header = new NebulaHeader();
             if (properties.Headers != null)
             {
@@ -26,7 +25,7 @@ namespace NebulaBus.Rabbitmq
                 }
             }
 
-            await _excute(message, header).ConfigureAwait(false);
+            await _excute(body, header).ConfigureAwait(false);
             await BasicAckAsync(deliveryTag, cancellationToken);
         }
 

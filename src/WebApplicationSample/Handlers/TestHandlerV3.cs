@@ -1,5 +1,5 @@
-﻿using NebulaBus;
-using WebApplicationSample.Messages;
+﻿using MessageLibrary;
+using NebulaBus;
 
 namespace WebApplicationSample.Handlers
 {

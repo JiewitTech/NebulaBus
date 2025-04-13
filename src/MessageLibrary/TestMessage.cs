@@ -1,4 +1,4 @@
-﻿namespace WebApplicationSample.Messages
+﻿namespace MessageLibrary
 {
     public class TestMessage
     {

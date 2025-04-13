@@ -1,7 +1,0 @@
-next-version: 1.0.0
-mode: ContinuousDelivery
-assembly-file-versioning-scheme: MajorMinorPatchTag
-branches:
-  release:
-    increment: Patch 
-    tag: ''

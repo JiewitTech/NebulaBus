@@ -1,9 +1,13 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace NebulaBus
 {
+    [JsonConverter(typeof(NebulaHeaderConverter))]
     public class NebulaHeader : IDictionary<string, string>
     {
         public const string RequestId = "nb-request-id";
@@ -112,6 +116,24 @@ namespace NebulaBus
         IEnumerator IEnumerable.GetEnumerator()
         {
             return GetEnumerator();
+        }
+
+        public Dictionary<string, string> ToDictionary() => _dic;
+    }
+
+    public class NebulaHeaderConverter : JsonConverter<NebulaHeader>
+    {
+        public override NebulaHeader Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+        {
+            // 反序列化JSON对象为字典 
+            var jsonDict = JsonSerializer.Deserialize<Dictionary<string, string>>(ref reader, options);
+            if (jsonDict == null) return new NebulaHeader();
+            return new NebulaHeader(jsonDict); ;
+        }
+
+        public override void Write(Utf8JsonWriter writer, NebulaHeader value, JsonSerializerOptions options)
+        {
+            JsonSerializer.Serialize(writer, value.ToDictionary(), options);
         }
     }
 }
