@@ -56,7 +56,7 @@ namespace NebulaBus.Rabbitmq
             try
             {
                 //Sender Channel
-                _senderChannel = await CreateSenderChannel();
+                _senderChannel = await CreateNewChannel();
                 _channels.Add(_senderChannel);
 
                 await RegisteConsumer(cancellationToken);
@@ -80,13 +80,7 @@ namespace NebulaBus.Rabbitmq
                 }
 
                 var jsonBytes = JsonSerializer.SerializeToUtf8Bytes(message, _nebulaOptions.JsonSerializerOptions);
-                var props = new BasicProperties()
-                {
-                    Headers = header.ToDictionary(x => x.Key, (x) => (object?)x.Value),
-                    Persistent = true,
-                    ContentType = "application/json"
-                };
-                await _senderChannel.BasicPublishAsync(_rabbitmqOptions.ExchangeName, routingKey, false, props, jsonBytes);
+                await PublishByChannel(_senderChannel, routingKey, jsonBytes, header);
             }
             finally
             {
@@ -112,17 +106,8 @@ namespace NebulaBus.Rabbitmq
             return _connection;
         }
 
-        private async Task<IChannel> CreateSenderChannel()
-        {
-            var connection = await GetConnection();
-            if (_senderChannel == null || !_senderChannel.IsOpen)
-                _senderChannel = await connection.CreateChannelAsync();
-            return _senderChannel;
-        }
-
         private async Task<IChannel> CreateNewChannel()
         {
-            await _semaphore.WaitAsync();
             try
             {
                 var connection = await GetConnection();
@@ -130,7 +115,6 @@ namespace NebulaBus.Rabbitmq
             }
             finally
             {
-                _semaphore.Release();
             }
         }
 
