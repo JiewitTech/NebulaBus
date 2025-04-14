@@ -30,6 +30,9 @@ namespace Microsoft.Extensions.DependencyInjection
             //Processor
             services.TryAddEnumerable(ServiceDescriptor.Singleton<IProcessor, RabbitmqProcessor>());
 
+            //Rabbitmq
+            services.AddSingleton<IRabbitmqChannelPool, RabbitmqChannelPool>();
+
             //Schedule job
             services.AddSingleton<IDelayMessageScheduler, DelayMessageScheduler>();
             services.AddKeyedSingleton<IJobFactory, NebulaBusJobFactory>("NebulaBusJobFactory");
@@ -57,7 +60,7 @@ namespace Microsoft.Extensions.DependencyInjection
         public static void AddNebulaBusHandler<TH>(this IServiceCollection services)
             where TH : NebulaHandler
         {
-            services.TryAddEnumerable(ServiceDescriptor.Transient<NebulaHandler, TH>());
+            services.TryAddEnumerable(ServiceDescriptor.Transient<INebulaHandler, TH>());
             services.TryAddTransient<TH>();
         }
 
@@ -65,16 +68,16 @@ namespace Microsoft.Extensions.DependencyInjection
             where TH : NebulaHandler<TM>
             where TM : class, new()
         {
-            services.TryAddEnumerable(ServiceDescriptor.Transient<NebulaHandler, TH>());
+            services.TryAddEnumerable(ServiceDescriptor.Transient<INebulaHandler, TH>());
             services.TryAddTransient<TH>();
         }
 
         public static void AddNebulaBusHandler(this IServiceCollection services, params Assembly[] assemblies)
         {
-            var types = assemblies.SelectMany(x => x.GetTypes().Where(t => t.IsClass && !t.IsAbstract && typeof(NebulaHandler).IsAssignableFrom(t)));
+            var types = assemblies.SelectMany(x => x.GetTypes().Where(t => t.IsClass && !t.IsAbstract && typeof(INebulaHandler).IsAssignableFrom(t)));
             foreach (var typeItem in types)
             {
-                services.TryAddEnumerable(ServiceDescriptor.Transient(typeof(NebulaHandler), typeItem));
+                services.TryAddEnumerable(ServiceDescriptor.Transient(typeof(INebulaHandler), typeItem));
                 services.TryAddTransient(typeItem);
             }
         }

@@ -41,7 +41,7 @@ namespace NebulaBus.Scheduler
                     await processor.Publish(messageData.Name, messageData.Message, messageData.Header);
                 }
 
-                await _store.Delete(messageData);
+                _store.Delete(messageData);
             }
             catch (Exception e)
             {

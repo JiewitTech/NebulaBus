@@ -13,17 +13,15 @@ namespace NebulaBus.Store.Memory
             _storeMessages = new ConcurrentDictionary<string, DelayStoreMessage>();
         }
 
-        public async Task Add(DelayStoreMessage delayStoreMessage)
+        public void Add(DelayStoreMessage delayStoreMessage)
         {
             _storeMessages.AddOrUpdate($"{delayStoreMessage.MessageId}.{delayStoreMessage.Name}", c => delayStoreMessage,
                 (c, o) => delayStoreMessage);
-            await Task.CompletedTask;
         }
 
-        public async Task Delete(DelayStoreMessage delayStoreMessage)
+        public void Delete(DelayStoreMessage delayStoreMessage)
         {
             _storeMessages.TryRemove($"{delayStoreMessage.MessageId}.{delayStoreMessage.Name}", out _);
-            await Task.CompletedTask;
         }
 
         public async Task<DelayStoreMessage[]?> Get(long beforeTimestamp)
@@ -35,11 +33,6 @@ namespace NebulaBus.Store.Memory
         public bool Lock()
         {
             return true;
-        }
-
-        public void Dispose()
-        {
-            _storeMessages.Clear();
         }
     }
 }

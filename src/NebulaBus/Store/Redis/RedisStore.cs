@@ -21,24 +21,20 @@ namespace NebulaBus.Store.Redis
             _nebulaOptions = nebulaOptions;
         }
 
-        public async Task Add(DelayStoreMessage delayStoreMessage)
+        public void Add(DelayStoreMessage delayStoreMessage)
         {
-            using (var tran = _redisClient.Multi())
-            {
-                tran.ZAdd(IndexRedisKey, delayStoreMessage.TriggerTime, $"{delayStoreMessage.MessageId}.{delayStoreMessage.Name}");
-                tran.HSet(RedisKey, $"{delayStoreMessage.MessageId}.{delayStoreMessage.Name}", delayStoreMessage);
-                tran.Exec();
-            }
-            await Task.CompletedTask;
+            using var tran = _redisClient.Multi();
+            tran.ZAdd(IndexRedisKey, delayStoreMessage.TriggerTime, $"{delayStoreMessage.MessageId}.{delayStoreMessage.Name}");
+            tran.HSet(RedisKey, $"{delayStoreMessage.MessageId}.{delayStoreMessage.Name}", delayStoreMessage);
+            tran.Exec();
         }
 
-        public async Task Delete(DelayStoreMessage delayStoreMessage)
+        public void Delete(DelayStoreMessage delayStoreMessage)
         {
             using var tran = _redisClient.Multi();
             tran.ZRem(IndexRedisKey, $"{delayStoreMessage.MessageId}.{delayStoreMessage.Name}");
             tran.HDel(RedisKey, $"{delayStoreMessage.MessageId}.{delayStoreMessage.Name}");
             tran.Exec();
-            await Task.CompletedTask;
         }
 
         public async Task<DelayStoreMessage[]?> Get(long beforeTimestamp)
@@ -51,13 +47,13 @@ namespace NebulaBus.Store.Redis
             {
                 if (result[i] == null)
                 {
-                    await RemoveKey(keys[i]);
+                    RemoveKey(keys[i]);
                 }
             }
             return result.Where(x => x != null).ToArray();
         }
 
-        private async Task RemoveKey(string key)
+        private void RemoveKey(string key)
         {
             using var tran = _redisClient.Multi();
             tran.ZRem(IndexRedisKey, key);
@@ -69,12 +65,6 @@ namespace NebulaBus.Store.Redis
         {
             _redisClientLock = _redisClient.Lock($"NebulaBus:{_nebulaOptions.ClusterName}.Lock", 3, true);
             return _redisClientLock != null;
-        }
-
-        public void Dispose()
-        {
-            _redisClientLock?.Dispose();
-            _redisClient?.Dispose();
         }
     }
 }
