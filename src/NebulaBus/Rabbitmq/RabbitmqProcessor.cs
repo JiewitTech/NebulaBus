@@ -37,11 +37,16 @@ namespace NebulaBus.Rabbitmq
 
         public void Dispose()
         {
-            foreach (var channel in _channels)
+            try
             {
-                channel.CloseAsync().Wait();
-                channel.Dispose();
+                foreach (var channel in _channels)
+                {
+                    channel.CloseAsync().Wait();
+                    channel.Dispose();
+                }
             }
+            catch
+            { }
         }
 
         public async Task Start(CancellationToken cancellationToken)
@@ -110,7 +115,7 @@ namespace NebulaBus.Rabbitmq
             //每个handler创建一个channel 一个consumer
             for (byte i = 0; i < handlerInfo.ExcuteThreadCount; i++)
             {
-                var channel = await _channelPool.GetChannelAsync();
+                var channel = await _channelPool.GetChannelAsync(cancellationToken);
                 _channels.Add(channel);
 
                 if (qos > 0)
