@@ -48,14 +48,17 @@ namespace NebulaBus
             where T : class, new()
         {
             var header = BuildNebulaHeader<T>(nameOrGroup);
-            _delayMessageScheduler.Schedule(new DelayStoreMessage()
+            await Task.Run(() =>
             {
-                MessageId = header[NebulaHeader.MessageId]!,
-                Group = nameOrGroup,
-                Header = header,
-                Message = message,
-                Name = nameOrGroup,
-                TriggerTime = DateTimeOffset.Now.AddSeconds(delay.TotalSeconds).ToUnixTimeSeconds()
+                _delayMessageScheduler.Schedule(new DelayStoreMessage()
+                {
+                    MessageId = header[NebulaHeader.MessageId]!,
+                    Group = nameOrGroup,
+                    Header = header,
+                    Message = message,
+                    Name = nameOrGroup,
+                    TriggerTime = DateTimeOffset.Now.AddSeconds(delay.TotalSeconds).ToUnixTimeSeconds()
+                });
             });
         }
 
@@ -63,14 +66,17 @@ namespace NebulaBus
             where T : class, new()
         {
             var header = BuildNebulaHeader<T>(nameOrGroup, headers);
-            _delayMessageScheduler.Schedule(new DelayStoreMessage()
+            await Task.Run(() =>
             {
-                MessageId = header[NebulaHeader.MessageId]!,
-                Group = nameOrGroup,
-                Header = header,
-                Message = message,
-                Name = nameOrGroup,
-                TriggerTime = DateTimeOffset.Now.AddSeconds(delay.TotalSeconds).ToUnixTimeSeconds()
+                _delayMessageScheduler.Schedule(new DelayStoreMessage()
+                {
+                    MessageId = header[NebulaHeader.MessageId]!,
+                    Group = nameOrGroup,
+                    Header = header,
+                    Message = message,
+                    Name = nameOrGroup,
+                    TriggerTime = DateTimeOffset.Now.AddSeconds(delay.TotalSeconds).ToUnixTimeSeconds()
+                });
             });
         }
 

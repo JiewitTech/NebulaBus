@@ -22,7 +22,7 @@ namespace WebApplicationSample.Handlers
         protected override async Task Handle(TestMessage message, NebulaHeader header)
         {
             Console.WriteLine($"{DateTime.Now} [{Name}] [{nameof(TestHandlerV1)}]Received Message :{message.Message} RetryCount {header.GetRetryCount()}");
-            throw new Exception("Test Exception");
+
         }
     }
 }

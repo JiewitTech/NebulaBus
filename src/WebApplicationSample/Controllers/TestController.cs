@@ -85,15 +85,28 @@ namespace WebApplicationSample.Controllers
             }).ToArray();
         }
 
-        [HttpGet("StressTest")]
-        public async Task StressTest()
+        [HttpGet("StressTestSend")]
+        public async Task StressTestSend()
         {
-            _logger.LogInformation($"{DateTime.Now} Start send StressTest Message");
+            _logger.LogInformation($"{DateTime.Now} Start send StressTestSend Message");
 
             var tasks = new List<Task>();
             for (int i = 0; i < 2000; i++)
             {
-                tasks.Add(_bus.PublishAsync("NebulaBus.TestHandler.V4", new TestMessage { Message = $"StressTest Message{i}" }));
+                tasks.Add(_bus.PublishAsync("NebulaBus.TestHandler.V4", new TestMessage { Message = $"StressTestSend Message{i}" }));
+            }
+            await Task.WhenAll(tasks);
+        }
+
+        [HttpGet("StressTestPublish")]
+        public async Task StressTestPublish()
+        {
+            _logger.LogInformation($"{DateTime.Now} Start send StressTestPublish Message");
+
+            var tasks = new List<Task>();
+            for (int i = 0; i < 2000; i++)
+            {
+                tasks.Add(_bus.PublishAsync("NebulaBus.TestHandler", new TestMessage { Message = $"StressTestPublish Message{i}" }));
             }
             await Task.WhenAll(tasks);
         }
