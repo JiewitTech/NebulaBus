@@ -19,17 +19,14 @@ namespace NebulaBus.Rabbitmq
         private bool _started;
         private readonly NebulaOptions _nebulaOptions;
         private readonly IRabbitmqChannelPool _channelPool;
-        private readonly IServiceScopeFactory _serviceFactory;
 
         public RabbitmqProcessor(
             IServiceProvider serviceProvider,
-            IServiceScopeFactory serviceScopeFactory,
             IRabbitmqChannelPool rabbitmqChannelPool,
             NebulaOptions nebulaOptions,
             ILogger<RabbitmqProcessor> logger)
         {
             _serviceProvider = serviceProvider;
-            _serviceFactory = serviceScopeFactory;
             _nebulaOptions = nebulaOptions;
             _rabbitmqOptions = nebulaOptions.RabbitmqOptions;
             _channels = new List<IChannel>();
@@ -137,7 +134,7 @@ namespace NebulaBus.Rabbitmq
                     await channel.QueueBindAsync(handlerInfo.Name, _rabbitmqOptions.ExchangeName, handlerInfo.Name, null);
 
                 //Create Consumer
-                var consumer = new NebulaRabbitmqConsumer(channel, _serviceFactory, handlerInfo.Type);
+                var consumer = new NebulaRabbitmqConsumer(channel, _serviceProvider, handlerInfo.Type);
                 await channel.BasicConsumeAsync(handlerInfo.Name, false, consumer, cancellationToken);
             }
         }
