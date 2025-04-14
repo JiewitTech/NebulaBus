@@ -1,4 +1,5 @@
-﻿using NebulaBus.Scheduler;
+﻿using Microsoft.Extensions.DependencyInjection;
+using NebulaBus.Scheduler;
 using System;
 using System.Reflection;
 using System.Text.Json;
@@ -6,7 +7,17 @@ using System.Threading.Tasks;
 
 namespace NebulaBus
 {
-    public abstract class NebulaHandler
+    internal interface INebulaHandler
+    {
+        public string Name { get; }
+        public string Group { get; }
+        public TimeSpan RetryInterval { get; }
+        public TimeSpan RetryDelay { get; }
+        public int MaxRetryCount { get; }
+        public byte? ExecuteThreadCount { get; }
+    }
+
+    public abstract class NebulaHandler : INebulaHandler
     {
         public abstract string Name { get; }
         public abstract string Group { get; }
@@ -16,11 +27,9 @@ namespace NebulaBus
         public virtual byte? ExecuteThreadCount => null;
 
         internal abstract Task Excute(
-            IDelayMessageScheduler delayMessageScheduler,
+            IServiceProvider serviceProvider,
             ReadOnlyMemory<byte> message,
-            NebulaHeader header,
-            JsonSerializerOptions jsonSerializerOptions,
-            Func<string, ReadOnlyMemory<byte>, NebulaHeader, Task> repulish);
+            NebulaHeader header);
 
         protected async Task DirectRetryExecute(Func<Task> operation)
         {
@@ -44,12 +53,13 @@ namespace NebulaBus
         where T : class, new()
     {
         internal override async Task Excute(
-            IDelayMessageScheduler delayMessageScheduler,
+            IServiceProvider serviceProvider,
             ReadOnlyMemory<byte> message,
-            NebulaHeader header,
-            JsonSerializerOptions jsonSerializerOptions,
-            Func<string, ReadOnlyMemory<byte>, NebulaHeader, Task> repulish)
+            NebulaHeader header)
         {
+            var delayMessageScheduler = serviceProvider.GetRequiredService<IDelayMessageScheduler>();
+            var jsonSerializerOptions = serviceProvider.GetRequiredService<NebulaOptions>().JsonSerializerOptions;
+
             (bool success, T? data, Exception? exception) = await DeSerializer(message, header, jsonSerializerOptions);
             if (!success || data == null)
             {
@@ -96,15 +106,8 @@ namespace NebulaBus
 
                 header[NebulaHeader.RetryCount] = (retryCount + 1).ToString();
 
-                //First Time to retry，if no delay then send directly
-                if (retryCount == 0 && RetryDelay.TotalSeconds <= 0)
-                {
-                    await repulish(Name, message, header);
-                    return;
-                }
-
-                //First Time to retry，if have delay then send after delay time
-                if (retryCount == 0 && RetryDelay.TotalSeconds > 0)
+                //First Time to retry，use retry delay
+                if (retryCount == 0)
                 {
                     await delayMessageScheduler.Schedule(new Store.DelayStoreMessage()
                     {

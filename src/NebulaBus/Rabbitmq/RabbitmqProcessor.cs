@@ -17,7 +17,6 @@ namespace NebulaBus.Rabbitmq
         private IConnection? _connection;
         private readonly List<IChannel> _channels;
         private IChannel _senderChannel;
-        private readonly IDelayMessageScheduler _delayMessageScheduler;
         private readonly ILogger<RabbitmqProcessor> _logger;
         private readonly IServiceProvider _serviceProvider;
         private bool _started;
@@ -27,14 +26,12 @@ namespace NebulaBus.Rabbitmq
         public RabbitmqProcessor(
             IServiceProvider serviceProvider,
             NebulaOptions nebulaOptions,
-            IDelayMessageScheduler delayMessageScheduler,
             ILogger<RabbitmqProcessor> logger)
         {
             _serviceProvider = serviceProvider;
             _nebulaOptions = nebulaOptions;
             _rabbitmqOptions = nebulaOptions.RabbitmqOptions;
             _channels = new List<IChannel>();
-            _delayMessageScheduler = delayMessageScheduler;
             _logger = logger;
             _semaphore = new SemaphoreSlim(1, 1);
         }
@@ -130,7 +127,7 @@ namespace NebulaBus.Rabbitmq
 
         private async Task RegisteConsumer(CancellationToken cancellationToken)
         {
-            var _nebulaHandlers = _serviceProvider.GetServices<NebulaHandler>();
+            var _nebulaHandlers = _serviceProvider.GetServices<INebulaHandler>();
             if (_nebulaHandlers == null) return;
 
             var handlerInfos = _nebulaHandlers.Select(x => new HandlerInfo()
@@ -175,15 +172,7 @@ namespace NebulaBus.Rabbitmq
                     await channel.QueueBindAsync(handlerInfo.Name, _rabbitmqOptions.ExchangeName, handlerInfo.Name, null);
 
                 //Create Consumer
-                var consumer = new NebulaRabbitmqConsumer(channel, qos, async (message, header) =>
-                {
-                    var handler = _serviceProvider.GetService(handlerInfo.Type) as NebulaHandler;
-                    if (handler == null) return;
-                    await handler.Excute(_delayMessageScheduler!, message, header, _nebulaOptions.JsonSerializerOptions, (routingKey, message, header) =>
-                    {
-                        return PublishByChannel(channel, routingKey, message, header);
-                    });
-                });
+                var consumer = new NebulaRabbitmqConsumer(channel, _serviceProvider, handlerInfo.Type);
                 await channel.BasicConsumeAsync(handlerInfo.Name, false, consumer, cancellationToken);
             }
         }
