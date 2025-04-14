@@ -30,6 +30,9 @@ namespace Microsoft.Extensions.DependencyInjection
             //Processor
             services.TryAddEnumerable(ServiceDescriptor.Singleton<IProcessor, RabbitmqProcessor>());
 
+            //Rabbitmq
+            services.AddSingleton<IRabbitmqChannelPool, RabbitmqChannelPool>();
+
             //Schedule job
             services.AddSingleton<IDelayMessageScheduler, DelayMessageScheduler>();
             services.AddKeyedSingleton<IJobFactory, NebulaBusJobFactory>("NebulaBusJobFactory");

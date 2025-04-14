@@ -109,7 +109,7 @@ namespace NebulaBus
                 //First Time to retry，use retry delay
                 if (retryCount == 0)
                 {
-                    await delayMessageScheduler.Schedule(new Store.DelayStoreMessage()
+                    delayMessageScheduler.Schedule(new Store.DelayStoreMessage()
                     {
                         Group = Group,
                         Name = Name,
@@ -129,7 +129,7 @@ namespace NebulaBus
                 }
 
                 //Interval Retry
-                await delayMessageScheduler.Schedule(new Store.DelayStoreMessage()
+                delayMessageScheduler.Schedule(new Store.DelayStoreMessage()
                 {
                     Group = Group,
                     Name = Name,

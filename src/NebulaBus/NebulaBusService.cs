@@ -48,7 +48,7 @@ namespace NebulaBus
             where T : class, new()
         {
             var header = BuildNebulaHeader<T>(nameOrGroup);
-            await _delayMessageScheduler.Schedule(new DelayStoreMessage()
+            _delayMessageScheduler.Schedule(new DelayStoreMessage()
             {
                 MessageId = header[NebulaHeader.MessageId]!,
                 Group = nameOrGroup,
@@ -63,7 +63,7 @@ namespace NebulaBus
             where T : class, new()
         {
             var header = BuildNebulaHeader<T>(nameOrGroup, headers);
-            await _delayMessageScheduler.Schedule(new DelayStoreMessage()
+            _delayMessageScheduler.Schedule(new DelayStoreMessage()
             {
                 MessageId = header[NebulaHeader.MessageId]!,
                 Group = nameOrGroup,

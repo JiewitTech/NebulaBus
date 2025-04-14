@@ -27,27 +27,17 @@ namespace NebulaBus.Scheduler
             _serializerOptions = serviceProvider.GetRequiredService<NebulaOptions>().JsonSerializerOptions;
         }
 
-        public async Task Schedule(DelayStoreMessage delayMessage)
+        public void Schedule(DelayStoreMessage delayMessage)
         {
             if (string.IsNullOrEmpty(delayMessage.MessageId))
                 return;
 
-            await _store.Add(delayMessage);
+            _store.Add(delayMessage);
         }
 
         public async Task StartSchedule(CancellationToken cancellationToken)
         {
             var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-            cts.Token.Register(() =>
-            {
-                try
-                {
-                    _store?.Dispose();
-                }
-                catch
-                {
-                }
-            });
 
             StdSchedulerFactory factory = new StdSchedulerFactory();
             _scheduler = await factory.GetScheduler(cts.Token);

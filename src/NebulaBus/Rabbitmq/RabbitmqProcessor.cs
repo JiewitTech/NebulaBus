@@ -14,17 +14,16 @@ namespace NebulaBus.Rabbitmq
     internal class RabbitmqProcessor : IProcessor
     {
         private readonly RabbitmqOptions _rabbitmqOptions;
-        private IConnection? _connection;
         private readonly List<IChannel> _channels;
-        private IChannel _senderChannel;
         private readonly ILogger<RabbitmqProcessor> _logger;
         private readonly IServiceProvider _serviceProvider;
         private bool _started;
-        private readonly SemaphoreSlim _semaphore;
         private readonly NebulaOptions _nebulaOptions;
+        private readonly IRabbitmqChannelPool _channelPool;
 
         public RabbitmqProcessor(
             IServiceProvider serviceProvider,
+            IRabbitmqChannelPool rabbitmqChannelPool,
             NebulaOptions nebulaOptions,
             ILogger<RabbitmqProcessor> logger)
         {
@@ -33,29 +32,22 @@ namespace NebulaBus.Rabbitmq
             _rabbitmqOptions = nebulaOptions.RabbitmqOptions;
             _channels = new List<IChannel>();
             _logger = logger;
-            _semaphore = new SemaphoreSlim(1, 1);
+            _channelPool = rabbitmqChannelPool;
         }
 
         public void Dispose()
         {
-            _senderChannel?.Dispose();
             foreach (var channel in _channels)
             {
                 channel.CloseAsync().Wait();
                 channel.Dispose();
             }
-
-            _connection?.CloseAsync().Wait();
-            _connection?.Dispose();
         }
 
         public async Task Start(CancellationToken cancellationToken)
         {
             try
             {
-                //Sender Channel
-                _senderChannel = await CreateNewChannel();
-
                 await RegisteConsumer(cancellationToken);
                 _started = true;
             }
@@ -67,22 +59,18 @@ namespace NebulaBus.Rabbitmq
 
         public async Task Publish(string routingKey, object message, NebulaHeader header)
         {
-            await _semaphore.WaitAsync();
+            var channel = await _channelPool.GetChannelAsync();
             try
             {
-                if (!_started)
+                var props = new BasicProperties()
                 {
-                    _logger.LogError($"Processor RabbitmqProcessor not started");
-                    return;
-                }
-
-                if (_senderChannel == null || _senderChannel.IsOpen)
-                    _senderChannel?.Dispose();
-
-                _senderChannel = await CreateNewChannel();
+                    Headers = header.ToDictionary(x => x.Key, (x) => (object?)x.Value),
+                    Persistent = true,
+                    ContentType = "application/json"
+                };
 
                 var jsonBytes = JsonSerializer.SerializeToUtf8Bytes(message, _nebulaOptions.JsonSerializerOptions);
-                await PublishByChannel(_senderChannel, routingKey, jsonBytes, header);
+                await channel.BasicPublishAsync(_rabbitmqOptions.ExchangeName, routingKey, false, props, jsonBytes);
             }
             catch (Exception ex)
             {
@@ -91,37 +79,7 @@ namespace NebulaBus.Rabbitmq
             }
             finally
             {
-                _semaphore.Release();
-            }
-        }
-
-        private async Task<IConnection> GetConnection()
-        {
-            if (_connection == null || !_connection.IsOpen)
-            {
-                var connectionFactory = new ConnectionFactory()
-                {
-                    HostName = _rabbitmqOptions.HostName,
-                    UserName = _rabbitmqOptions.UserName,
-                    Password = _rabbitmqOptions.Password,
-                    VirtualHost = _rabbitmqOptions.VirtualHost,
-                    AutomaticRecoveryEnabled = true,
-                    ClientProvidedName = $"NebulaBus:{Environment.MachineName}"
-                };
-                _connection = await connectionFactory.CreateConnectionAsync();
-            }
-            return _connection;
-        }
-
-        private async Task<IChannel> CreateNewChannel()
-        {
-            try
-            {
-                var connection = await GetConnection();
-                return await connection.CreateChannelAsync();
-            }
-            finally
-            {
+                await _channelPool.ReturnChannel(channel);
             }
         }
 
@@ -152,7 +110,7 @@ namespace NebulaBus.Rabbitmq
             //每个handler创建一个channel 一个consumer
             for (byte i = 0; i < handlerInfo.ExcuteThreadCount; i++)
             {
-                var channel = await CreateNewChannel();
+                var channel = await _channelPool.GetChannelAsync();
                 _channels.Add(channel);
 
                 if (qos > 0)
@@ -175,24 +133,6 @@ namespace NebulaBus.Rabbitmq
                 var consumer = new NebulaRabbitmqConsumer(channel, _serviceProvider, handlerInfo.Type);
                 await channel.BasicConsumeAsync(handlerInfo.Name, false, consumer, cancellationToken);
             }
-        }
-
-        public async Task PublishByChannel(IChannel channel, string routingKey, ReadOnlyMemory<byte> message, NebulaHeader header)
-        {
-            if (!_started)
-            {
-                _logger.LogError($"Processor {this.GetType().Name} not started");
-                return;
-            }
-
-            var props = new BasicProperties()
-            {
-                Headers = header.ToDictionary(x => x.Key, (x) => (object?)x.Value),
-                Persistent = true,
-                ContentType = "application/json"
-            };
-
-            await channel.BasicPublishAsync(_rabbitmqOptions.ExchangeName, routingKey, false, props, message);
         }
     }
 }
