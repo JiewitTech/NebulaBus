@@ -13,6 +13,7 @@ namespace WebApplicationSample.Handlers
         public override byte? ExecuteThreadCount => 2;
 
         private readonly INebulaBus _bus;
+        public int TestValue = 2;
 
         public TestHandlerV1(INebulaBus nebulaBus)
         {
@@ -22,7 +23,7 @@ namespace WebApplicationSample.Handlers
         protected override async Task Handle(TestMessage message, NebulaHeader header)
         {
             Console.WriteLine($"{DateTime.Now} [{Name}] [{nameof(TestHandlerV1)}]Received Message :{message.Message} RetryCount {header.GetRetryCount()}");
-
+            TestValue = 3;
         }
     }
 }
