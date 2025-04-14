@@ -34,5 +34,9 @@ namespace NebulaBus.Store.Memory
         {
             return true;
         }
+
+        public void Dispose()
+        {
+        }
     }
 }

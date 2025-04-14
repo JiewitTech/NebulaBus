@@ -34,14 +34,14 @@ namespace NebulaBus.Rabbitmq
             };
         }
 
-        private async Task<IChannel> CreateNewChannel()
+        private async Task<IChannel> CreateNewChannel(CancellationToken cancellationToken = default)
         {
             await _semaphore.WaitAsync();
             try
             {
                 if (_connection == null || !_connection.IsOpen)
-                    _connection = await _connectionFactory.CreateConnectionAsync();
-                return await _connection.CreateChannelAsync();
+                    _connection = await _connectionFactory.CreateConnectionAsync(cancellationToken);
+                return await _connection.CreateChannelAsync(cancellationToken: cancellationToken);
             }
             catch (Exception ex)
             {
@@ -54,7 +54,7 @@ namespace NebulaBus.Rabbitmq
             }
         }
 
-        public async Task<IChannel> GetChannelAsync()
+        public async Task<IChannel> GetChannelAsync(CancellationToken cancellationToken = default)
         {
             if (_channelPool.TryDequeue(out var channel) && channel.IsOpen)
                 return channel;
