@@ -44,6 +44,13 @@ namespace NebulaBus.Scheduler
             _scheduler.JobFactory = _jobFactory;
             await _scheduler.Start(cts.Token);
 
+            cts.Token.Register(() =>
+            {
+                _scheduler.Clear();
+                _scheduler.Shutdown();
+                _store?.Dispose();
+            });
+
             while (!cts.IsCancellationRequested)
             {
                 //lock

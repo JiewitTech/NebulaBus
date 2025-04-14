@@ -10,6 +10,7 @@ namespace NebulaBus.Store.Redis
     {
         private string RedisKey => $"NebulaBus:{_nebulaOptions.ClusterName}.Store";
         private string IndexRedisKey => $"NebulaBus:{_nebulaOptions.ClusterName}.StoreIndex";
+        private string LockKey => $"NebulaBus:{_nebulaOptions.ClusterName}.Lock";
 
         private readonly RedisClient _redisClient;
         private readonly NebulaOptions _nebulaOptions;
@@ -63,8 +64,18 @@ namespace NebulaBus.Store.Redis
 
         public bool Lock()
         {
-            _redisClientLock = _redisClient.Lock($"NebulaBus:{_nebulaOptions.ClusterName}.Lock", 3, true);
+            _redisClientLock = _redisClient.Lock(LockKey, 3, true);
             return _redisClientLock != null;
+        }
+
+        public void Dispose()
+        {
+            try
+            {
+                _redisClientLock.Dispose();
+            }
+            catch
+            { }
         }
     }
 }
