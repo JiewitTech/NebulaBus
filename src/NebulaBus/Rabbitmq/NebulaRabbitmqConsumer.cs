@@ -1,4 +1,5 @@
-﻿using RabbitMQ.Client;
+﻿using Microsoft.Extensions.DependencyInjection;
+using RabbitMQ.Client;
 using System;
 using System.Text;
 using System.Threading;
@@ -12,8 +13,8 @@ namespace NebulaBus.Rabbitmq
         private readonly Type _handlerType;
         public NebulaRabbitmqConsumer(IChannel channel, IServiceProvider serviceProvider, Type handlerType) : base(channel)
         {
-            _serviceProvider = serviceProvider;
             _handlerType = handlerType;
+            _serviceProvider = serviceProvider;
         }
 
         public override async Task HandleBasicDeliverAsync(string consumerTag, ulong deliveryTag, bool redelivered, string exchange, string routingKey, IReadOnlyBasicProperties properties, ReadOnlyMemory<byte> body, CancellationToken cancellationToken = default)
@@ -26,11 +27,11 @@ namespace NebulaBus.Rabbitmq
                     if (item.Value is byte[] bytes) header.Add(item.Key, Encoding.UTF8.GetString(bytes));
                 }
             }
-
-            var handler = _serviceProvider.GetService(_handlerType) as NebulaHandler;
+            using var scope = _serviceProvider.CreateScope();
+            var handler = scope.ServiceProvider.GetService(_handlerType) as NebulaHandler;
             if (handler != null)
             {
-                await handler.Excute(_serviceProvider, body, header);
+                await handler.Excute(scope.ServiceProvider, body, header);
             }
             await BasicAckAsync(deliveryTag, cancellationToken);
         }

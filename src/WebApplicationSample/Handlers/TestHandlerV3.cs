@@ -5,7 +5,7 @@ namespace WebApplicationSample.Handlers
 {
     public class TestHandlerV3 : NebulaHandler<TestMessage>
     {
-        public override string Name => "NebulaBus.TestHandler.V1";
+        public override string Name => "NebulaBus.TestHandler.V3";
         public override string Group => "NebulaBus.TestHandler";
         public override byte? ExecuteThreadCount => 4;
 

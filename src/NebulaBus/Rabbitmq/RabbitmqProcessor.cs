@@ -1,6 +1,5 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using NebulaBus.Scheduler;
 using RabbitMQ.Client;
 using System;
 using System.Collections.Generic;
