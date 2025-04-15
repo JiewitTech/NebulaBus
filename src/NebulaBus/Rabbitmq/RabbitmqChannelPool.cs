@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using RabbitMQ.Client;
 using System;
 using System.Collections.Concurrent;
@@ -25,13 +26,17 @@ namespace NebulaBus.Rabbitmq
             _logger = logger;
             _connectionFactory = new ConnectionFactory()
             {
-                HostName = _rabbitmqOptions.HostName,
                 UserName = _rabbitmqOptions.UserName,
                 Password = _rabbitmqOptions.Password,
                 VirtualHost = _rabbitmqOptions.VirtualHost,
                 AutomaticRecoveryEnabled = true,
+                Port = _rabbitmqOptions.Port,
                 ClientProvidedName = $"NebulaBus:{Environment.MachineName}.{Assembly.GetEntryAssembly().GetName().Name}"
             };
+            if (_rabbitmqOptions.SslOption != null)
+                _connectionFactory.Ssl = _rabbitmqOptions.SslOption;
+            if (!_rabbitmqOptions.HostName.Contains(","))
+                _connectionFactory.HostName = _rabbitmqOptions.HostName;
         }
 
         private async Task<IChannel> CreateNewChannel(CancellationToken cancellationToken = default)
@@ -40,7 +45,11 @@ namespace NebulaBus.Rabbitmq
             try
             {
                 if (_connection == null || !_connection.IsOpen)
-                    _connection = await _connectionFactory.CreateConnectionAsync(cancellationToken);
+                {
+                    if (_rabbitmqOptions.HostName.Contains(","))
+                        _connection = await _connectionFactory.CreateConnectionAsync(AmqpTcpEndpoint.ParseMultiple(_rabbitmqOptions.HostName), cancellationToken);
+                    else _connection = await _connectionFactory.CreateConnectionAsync(cancellationToken);
+                }
                 return await _connection.CreateChannelAsync(cancellationToken: cancellationToken);
             }
             catch (Exception ex)

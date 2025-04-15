@@ -11,7 +11,7 @@ namespace NebulaBus.Rabbitmq
         public string VirtualHost { get; set; } = "/";
         public int Port { get; set; } = 5672;
         public string ExchangeName { get; set; } = "nebula-bus-exchange";
-        public SslOption SslOption { get; set; } = new SslOption();
+        public SslOption? SslOption { get; set; } = null;
         /// <summary>
         /// 全局预取数
         /// </summary>
