@@ -1,5 +1,19 @@
 # NebulaBus - 高性能的 .NET 分布式事件总线框架，让开发者专注开发
 
+### **🏠 Repo**
+
+![GitHub Repo stars](https://img.shields.io/github/stars/JiewitTech/NebulaBus?style=plastic&link=https%3A%2F%2Fgithub.com%2FJiewitTech%2FNebulaBus)
+[![star](https://gitee.com/jiewit-tech/NebulaBus/badge/star.svg?theme=dark)](https://gitee.com/jiewit-tech/NebulaBus/stargazers)
+
+### **🔑 Release**
+
+[![NuGet Version](https://img.shields.io/nuget/v/NebulaBus?style=plastic&color=blue)](https://www.nuget.org/packages/NebulaBus/)
+![NuGet Downloads](https://img.shields.io/nuget/dt/NebulaBus?style=plastic&link=https%3A%2F%2Fwww.nuget.org%2Fpackages%2FNebulaBus)
+
+### **📔 文档完善**
+- [中文文档](https://nebulabus.jiewit.com/zh/)
+- [English Document](https://nebulabus.jiewit.com/)
+
 ###  **✨ 全场景消息驱动** 
 
 支持即时/延迟的广播、定向推送（如微服务间精准通信），内置Quartz.Net和失败重试机制，完美适配电商秒杀、物流追踪等高并发场景。
@@ -14,11 +28,8 @@
 ###  **🔧 开发者友好特性** 
 配置简单，快速上手，让开发者专注开发
 
-Release
-[![NuGet Version](https://img.shields.io/nuget/v/NebulaBus?style=plastic&color=blue)](https://www.nuget.org/packages/NebulaBus/)
-![NuGet Downloads](https://img.shields.io/nuget/dt/NebulaBus?style=plastic&link=https%3A%2F%2Fwww.nuget.org%2Fpackages%2FNebulaBus)
-
 安装 
+https://www.nuget.org/packages/NebulaBus/ 
 ```
 dotnet add package NebulaBus
 
