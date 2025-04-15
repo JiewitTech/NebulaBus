@@ -43,7 +43,16 @@ namespace Microsoft.Extensions.DependencyInjection
             //Delay Message Store
             if (!string.IsNullOrEmpty(options.RedisConnectionString))
             {
-                var freeRedisClient = new RedisClient(options.RedisConnectionString);
+                RedisClient freeRedisClient;
+                if (options.RedisConnectionString.Contains(";"))
+                {
+                    var connectionStringBuilders = options.RedisConnectionString.Split(";").Select(x => ConnectionStringBuilder.Parse(x)).ToArray();
+                    freeRedisClient = new RedisClient(connectionStringBuilders);
+                }
+                else
+                {
+                    freeRedisClient = new RedisClient(options.RedisConnectionString);
+                }
                 freeRedisClient.Serialize = obj => JsonSerializer.Serialize(obj, options.JsonSerializerOptions);
                 freeRedisClient.Deserialize = (json, type) => JsonSerializer.Deserialize(json, type, options.JsonSerializerOptions);
                 services.AddKeyedSingleton("NebulaBusRedis", freeRedisClient);
