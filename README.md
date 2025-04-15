@@ -1,4 +1,9 @@
-# NebulaBus - 高性能的 .NET 分布式事件总线框架，让开发者专注开发
+# NebulaBus - 面向未来的 .NET 分布式事件总线框架，让开发者专注开发
+![NuGet Downloads](https://img.shields.io/nuget/dt/NebulaBus?style=plastic&link=https%3A%2F%2Fwww.nuget.org%2Fpackages%2FNebulaBus)
+
+### **📔文档完善**
+- [中文文档](https://nebulabus.jiewit.com/zh/)
+- [English Document](https://nebulabus.jiewit.com/)
 
 ###  **✨ 全场景消息驱动** 
 
@@ -14,11 +19,8 @@
 ###  **🔧 开发者友好特性** 
 配置简单，快速上手，让开发者专注开发
 
-Release
-[![NuGet Version](https://img.shields.io/nuget/v/NebulaBus?style=plastic&color=blue)](https://www.nuget.org/packages/NebulaBus/)
-![NuGet Downloads](https://img.shields.io/nuget/dt/NebulaBus?style=plastic&link=https%3A%2F%2Fwww.nuget.org%2Fpackages%2FNebulaBus)
-
 安装 
+https://www.nuget.org/packages/NebulaBus/ 
 ```
 dotnet add package NebulaBus
 
