@@ -1,5 +1,6 @@
 ﻿using FreeRedis;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
@@ -15,11 +16,13 @@ namespace NebulaBus.Store.Redis
         private readonly RedisClient _redisClient;
         private readonly NebulaOptions _nebulaOptions;
         private RedisClient.LockController _redisClientLock;
+        private readonly ILogger<RedisStore> _logger;
 
-        public RedisStore(IServiceProvider provider, NebulaOptions nebulaOptions)
+        public RedisStore(IServiceProvider provider, NebulaOptions nebulaOptions, ILogger<RedisStore> logger)
         {
             _redisClient = provider.GetKeyedService<RedisClient>("NebulaBusRedis")!;
             _nebulaOptions = nebulaOptions;
+            _logger = logger;
         }
 
         public void Add(DelayStoreMessage delayStoreMessage)
@@ -64,8 +67,16 @@ namespace NebulaBus.Store.Redis
 
         public bool Lock()
         {
-            _redisClientLock = _redisClient.Lock(LockKey, 3, true);
-            return _redisClientLock != null;
+            try
+            {
+                _redisClientLock = _redisClient.Lock(LockKey, 3, true);
+                return _redisClientLock != null;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "RedisStore Lock failed");
+                return false;
+            }
         }
 
         public void Dispose()
