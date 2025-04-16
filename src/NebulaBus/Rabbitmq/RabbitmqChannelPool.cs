@@ -31,7 +31,8 @@ namespace NebulaBus.Rabbitmq
                 VirtualHost = _rabbitmqOptions.VirtualHost,
                 AutomaticRecoveryEnabled = true,
                 Port = _rabbitmqOptions.Port,
-                ClientProvidedName = $"NebulaBus:{Environment.MachineName}.{Assembly.GetEntryAssembly().GetName().Name}"
+                ClientProvidedName = $"NebulaBus:{Environment.MachineName}.{Assembly.GetEntryAssembly().GetName().Name}",
+                TopologyRecoveryEnabled = true,
             };
             if (_rabbitmqOptions.SslOption != null)
                 _connectionFactory.Ssl = _rabbitmqOptions.SslOption;
@@ -50,6 +51,9 @@ namespace NebulaBus.Rabbitmq
                         _connection = await _connectionFactory.CreateConnectionAsync(AmqpTcpEndpoint.ParseMultiple(_rabbitmqOptions.HostName), cancellationToken);
                     else _connection = await _connectionFactory.CreateConnectionAsync(cancellationToken);
                 }
+                _connection.ConnectionShutdownAsync+= async (sender, args) =>
+                {
+                };
                 return await _connection.CreateChannelAsync(cancellationToken: cancellationToken);
             }
             catch (Exception ex)

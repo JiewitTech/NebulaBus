@@ -19,6 +19,7 @@ namespace NebulaBus.Rabbitmq
         private bool _started;
         private readonly NebulaOptions _nebulaOptions;
         private readonly IRabbitmqChannelPool _channelPool;
+        private CancellationToken _originalCancellationToken;
 
         public RabbitmqProcessor(
             IServiceProvider serviceProvider,
@@ -50,6 +51,7 @@ namespace NebulaBus.Rabbitmq
 
         public async Task Start(CancellationToken cancellationToken)
         {
+            _originalCancellationToken = cancellationToken;
             try
             {
                 await RegisteConsumer(cancellationToken);
@@ -105,38 +107,37 @@ namespace NebulaBus.Rabbitmq
                 var getQos = _rabbitmqOptions.GetQos?.Invoke(info.Name, info.Group);
                 var qos = getQos > 0 ? getQos : _rabbitmqOptions.Qos;
 
-                await RegisteConsumerByConfig(info, qos.Value, cancellationToken);
+                for (byte i = 0; i < info.ExcuteThreadCount; i++)
+                {
+                    await RegisteConsumerByConfig(info.Name, info.Group, qos.Value, info.Type, cancellationToken);
+                }
             }
         }
 
-        private async Task RegisteConsumerByConfig(HandlerInfo handlerInfo, ushort qos, CancellationToken cancellationToken)
+        private async Task RegisteConsumerByConfig(string name, string group, ushort qos, Type handlerType, CancellationToken cancellationToken)
         {
-            //每个handler创建一个channel 一个consumer
-            for (byte i = 0; i < handlerInfo.ExcuteThreadCount; i++)
-            {
-                var channel = await _channelPool.GetChannelAsync(cancellationToken);
-                _channels.Add(channel);
+            var channel = await _channelPool.GetChannelAsync(cancellationToken);
+            _channels.Add(channel);
 
-                if (qos > 0)
-                    await channel.BasicQosAsync(0, qos, false);
+            if (qos > 0)
+                await channel.BasicQosAsync(0, qos, false);
 
-                //Create Exchange
-                await channel.ExchangeDeclareAsync(_rabbitmqOptions.ExchangeName, ExchangeType.Direct, true);
-                //Create Queue
-                await channel.QueueDeclareAsync(handlerInfo.Name, true, false, false, null);
+            //Create Exchange
+            await channel.ExchangeDeclareAsync(_rabbitmqOptions.ExchangeName, ExchangeType.Direct, true);
+            //Create Queue
+            await channel.QueueDeclareAsync(name, true, false, false, null);
 
-                //Bind Group RoutingKey
-                if (!string.IsNullOrEmpty(handlerInfo.Group))
-                    await channel.QueueBindAsync(handlerInfo.Name, _rabbitmqOptions.ExchangeName, handlerInfo.Group, null);
+            //Bind Group RoutingKey
+            if (!string.IsNullOrEmpty(group))
+                await channel.QueueBindAsync(name, _rabbitmqOptions.ExchangeName, group, null);
 
-                //Bind Name RoutingKey
-                if (!string.IsNullOrEmpty(handlerInfo.Name))
-                    await channel.QueueBindAsync(handlerInfo.Name, _rabbitmqOptions.ExchangeName, handlerInfo.Name, null);
+            //Bind Name RoutingKey
+            if (!string.IsNullOrEmpty(name))
+                await channel.QueueBindAsync(name, _rabbitmqOptions.ExchangeName, name, null);
 
-                //Create Consumer
-                var consumer = new NebulaRabbitmqConsumer(channel, _serviceProvider, handlerInfo.Type);
-                await channel.BasicConsumeAsync(handlerInfo.Name, false, consumer, cancellationToken);
-            }
+            //Create Consumer
+            var consumer = new NebulaRabbitmqConsumer(channel, _serviceProvider, handlerType);
+            await channel.BasicConsumeAsync(name, false, $"{Guid.NewGuid()}", consumer, cancellationToken);
         }
     }
 }
