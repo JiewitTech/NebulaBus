@@ -51,12 +51,13 @@ namespace NebulaBus.Scheduler
                 _store?.Dispose();
             });
 
+            var lockValue = Guid.NewGuid().ToString();
             while (!cts.IsCancellationRequested)
             {
                 try
                 {
                     //lock
-                    var gotLock = _store.Lock();
+                    var gotLock = _store.Lock(lockValue);
                     if (!gotLock)
                     {
                         await Task.Delay(1000, cancellationToken);
