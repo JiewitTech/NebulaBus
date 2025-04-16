@@ -53,17 +53,25 @@ namespace NebulaBus.Scheduler
 
             while (!cts.IsCancellationRequested)
             {
-                //lock
-                var gotLock = _store.Lock();
-                if (!gotLock)
+                try
                 {
-                    await Task.Delay(1000, cancellationToken);
-                    continue;
-                }
+                    //lock
+                    var gotLock = _store.Lock();
+                    if (!gotLock)
+                    {
+                        await Task.Delay(1000, cancellationToken);
+                        continue;
+                    }
 
-                while (!cts.IsCancellationRequested)
+                    while (!cts.IsCancellationRequested)
+                    {
+                        await ScheduleJobFromStore(cts.Token);
+                        await Task.Delay(1000, cts.Token);
+                    }
+                }
+                catch (Exception ex)
                 {
-                    await ScheduleJobFromStore(cts.Token);
+                    _logger.LogError(ex, "Schedule Failed");
                     await Task.Delay(1000, cts.Token);
                 }
             }
@@ -83,39 +91,32 @@ namespace NebulaBus.Scheduler
 
         private async Task ScheduleJobFromStore(CancellationToken cancellationToken)
         {
-            try
+            var delayMessages = await _store.Get(DateTimeOffset.Now.AddMinutes(3).ToUnixTimeSeconds());
+            if (delayMessages == null) return;
+            foreach (var delayMessage in delayMessages)
             {
-                var delayMessages = await _store.Get(DateTimeOffset.Now.AddMinutes(3).ToUnixTimeSeconds());
-                if (delayMessages == null) return;
-                foreach (var delayMessage in delayMessages)
+                if (delayMessage == null) continue;
+                if (cancellationToken.IsCancellationRequested)
+                    return;
+                var job = BuildJobDetail(delayMessage);
+                if (await _scheduler.CheckExists(job.Key, cancellationToken))
+                    continue;
+
+                if (delayMessage.TriggerTime < DateTimeOffset.Now.ToUnixTimeSeconds())
                 {
-                    if (delayMessage == null) continue;
-                    if (cancellationToken.IsCancellationRequested)
-                        return;
-                    var job = BuildJobDetail(delayMessage);
-                    if (await _scheduler.CheckExists(job.Key, cancellationToken))
-                        continue;
-
-                    if (delayMessage.TriggerTime < DateTimeOffset.Now.ToUnixTimeSeconds())
-                    {
-                        var rightNowTrigger = TriggerBuilder.Create()
-                            .WithIdentity($"NebulaBusTrigger:{delayMessage.MessageId}.{delayMessage.Name}")
-                            .StartNow()
-                            .Build();
-                        await _scheduler.ScheduleJob(job, rightNowTrigger, cancellationToken);
-                        continue;
-                    }
-
-                    var trigger = TriggerBuilder.Create()
+                    var rightNowTrigger = TriggerBuilder.Create()
                         .WithIdentity($"NebulaBusTrigger:{delayMessage.MessageId}.{delayMessage.Name}")
-                        .StartAt(DateTimeOffset.FromUnixTimeSeconds(delayMessage.TriggerTime))
+                        .StartNow()
                         .Build();
-                    await _scheduler.ScheduleJob(job, trigger, cancellationToken);
+                    await _scheduler.ScheduleJob(job, rightNowTrigger, cancellationToken);
+                    continue;
                 }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "ScheduleJobFromStore");
+
+                var trigger = TriggerBuilder.Create()
+                    .WithIdentity($"NebulaBusTrigger:{delayMessage.MessageId}.{delayMessage.Name}")
+                    .StartAt(DateTimeOffset.FromUnixTimeSeconds(delayMessage.TriggerTime))
+                    .Build();
+                await _scheduler.ScheduleJob(job, trigger, cancellationToken);
             }
         }
     }

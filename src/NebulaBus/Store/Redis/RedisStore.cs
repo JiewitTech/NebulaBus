@@ -67,16 +67,8 @@ namespace NebulaBus.Store.Redis
 
         public bool Lock()
         {
-            try
-            {
-                _redisClientLock = _redisClient.Lock(LockKey, 3, true);
-                return _redisClientLock != null;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "RedisStore Lock failed");
-                return false;
-            }
+            _redisClientLock = _redisClient.Lock(LockKey, 3, true);
+            return _redisClientLock != null;
         }
 
         public void Dispose()
