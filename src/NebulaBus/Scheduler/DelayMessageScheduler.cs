@@ -44,10 +44,17 @@ namespace NebulaBus.Scheduler
             _scheduler.JobFactory = _jobFactory;
             await _scheduler.Start(cts.Token);
 
+            var timer = new System.Timers.Timer(1000);
+            timer.Elapsed += Timer_Elapsed;
+            var lockValue = Guid.NewGuid().ToString();
+
             cts.Token.Register(() =>
             {
                 _scheduler.Clear();
                 _scheduler.Shutdown();
+                timer?.Stop();
+                timer?.Dispose();
+                _store?.UnLock(lockValue);
                 _store?.Dispose();
             });
 
@@ -56,25 +63,31 @@ namespace NebulaBus.Scheduler
                 try
                 {
                     //lock
-                    var gotLock = _store.Lock();
+                    var gotLock = _store.Lock(lockValue);
                     if (!gotLock)
                     {
                         await Task.Delay(1000, cancellationToken);
                         continue;
                     }
-
+                    timer.Start();
                     while (!cts.IsCancellationRequested)
                     {
                         await ScheduleJobFromStore(cts.Token);
-                        await Task.Delay(1000, cts.Token);
+                        await Task.Delay(1000);
                     }
                 }
                 catch (Exception ex)
                 {
+                    timer.Stop();
                     _logger.LogError(ex, "Schedule Failed");
-                    await Task.Delay(1000, cts.Token);
                 }
+                await Task.Delay(1000);
             }
+        }
+
+        private void Timer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
+        {
+            _store.RefreshLock();
         }
 
         private IJobDetail BuildJobDetail(DelayStoreMessage delayMessage)

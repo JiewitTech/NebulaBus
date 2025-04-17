@@ -65,17 +65,29 @@ namespace NebulaBus.Store.Redis
             tran.Exec();
         }
 
-        public bool Lock()
+        public bool Lock(string value)
         {
-            _redisClientLock = _redisClient.Lock(LockKey, 3, true);
-            return _redisClientLock != null;
+            return _redisClient.SetNx(LockKey, value, 3);
+        }
+
+        public void RefreshLock()
+        {
+            _redisClient.Expire(LockKey, 3);
+        }
+
+        public void UnLock(string value)
+        {
+            var val = _redisClient.Get<string>(LockKey);
+            if (val == value)
+                _redisClient.Del(LockKey);
         }
 
         public void Dispose()
         {
             try
             {
-                _redisClientLock.Dispose();
+                _redisClient?.Dispose();
+                _redisClientLock?.Dispose();
             }
             catch
             { }
