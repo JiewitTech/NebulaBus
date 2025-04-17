@@ -75,11 +75,18 @@ namespace NebulaBus.Store.Redis
             _redisClient.Expire(LockKey, 3);
         }
 
+        public void UnLock(string value)
+        {
+            var val = _redisClient.Get<string>(LockKey);
+            if (val == value)
+                _redisClient.Del(LockKey);
+        }
+
         public void Dispose()
         {
             try
             {
-                _redisClientLock.Dispose();
+                _redisClientLock?.Dispose();
             }
             catch
             { }

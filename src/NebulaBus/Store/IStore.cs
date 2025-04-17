@@ -10,5 +10,6 @@ namespace NebulaBus.Store
         Task<DelayStoreMessage[]?> Get(long beforeTimestamp);
         void RefreshLock();
         bool Lock(string value);
+        void UnLock(string value);
     }
 }

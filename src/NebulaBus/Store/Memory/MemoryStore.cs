@@ -30,12 +30,20 @@ namespace NebulaBus.Store.Memory
             return await Task.FromResult(result);
         }
 
-        public bool Lock()
+        public void Dispose()
+        {
+        }
+
+        public void RefreshLock()
+        {
+        }
+
+        public bool Lock(string value)
         {
             return true;
         }
 
-        public void Dispose()
+        public void UnLock(string value)
         {
         }
     }
