@@ -67,6 +67,8 @@ namespace NebulaBus.Store.Redis
 
         public bool Lock(string value)
         {
+            var val = _redisClient.Get<string>(LockKey);
+            if(val==value) return true;
             return _redisClient.SetNx(LockKey, value, 3);
         }
 
