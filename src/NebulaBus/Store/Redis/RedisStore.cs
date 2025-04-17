@@ -86,6 +86,7 @@ namespace NebulaBus.Store.Redis
         {
             try
             {
+                _redisClient?.Dispose();
                 _redisClientLock?.Dispose();
             }
             catch

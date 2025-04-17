@@ -73,14 +73,15 @@ namespace NebulaBus.Scheduler
                     while (!cts.IsCancellationRequested)
                     {
                         await ScheduleJobFromStore(cts.Token);
-                        await Task.Delay(1000, cts.Token);
+                        await Task.Delay(1000);
                     }
                 }
                 catch (Exception ex)
                 {
+                    timer.Stop();
                     _logger.LogError(ex, "Schedule Failed");
-                    await Task.Delay(1000, cts.Token);
                 }
+                await Task.Delay(1000);
             }
         }
 
