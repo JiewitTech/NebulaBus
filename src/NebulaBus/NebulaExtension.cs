@@ -5,17 +5,6 @@ namespace NebulaBus
 {
     internal static class NebulaExtension
     {
-        public static void ExcuteWithoutException(Action action)
-        {
-            try
-            {
-                action();
-            }
-            catch
-            {
-            }
-        }
-
         public static async Task ExcuteWithoutException(Task action)
         {
             try
@@ -27,7 +16,7 @@ namespace NebulaBus
             }
         }
 
-        public static async Task ExcuteWithoutException(Task action, Task realAction)
+        public static async Task ExcuteHandlerWithoutException(Task action, Task? realAction)
         {
             try
             {
@@ -35,10 +24,46 @@ namespace NebulaBus
             }
             catch (NotImplementedException)
             {
-                await ExcuteWithoutException(realAction);
+                if (realAction != null)
+                {
+                    await ExcuteWithoutException(realAction);
+                }
             }
             catch
             {
+            }
+        }
+
+        public static async Task<bool> ExcuteBeforeHandlerWithoutException(Task<bool> action)
+        {
+            try
+            {
+                return await action;
+            }
+            catch
+            {
+                return true;
+            }
+        }
+        
+        public static async Task<bool> ExcuteBeforeHandlerWithoutException(Task<bool> action, Task<bool>? realAction)
+        {
+            try
+            {
+                return await action;
+            }
+            catch (NotImplementedException)
+            {
+                if (realAction != null)
+                {
+                    return await ExcuteBeforeHandlerWithoutException(realAction);
+                }
+
+                return true;
+            }
+            catch
+            {
+                return true;
             }
         }
     }

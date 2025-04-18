@@ -59,17 +59,22 @@ namespace NebulaBus
         {
             var delayMessageScheduler = serviceProvider.GetRequiredService<IDelayMessageScheduler>();
             var jsonSerializerOptions = serviceProvider.GetRequiredService<NebulaOptions>().JsonSerializerOptions;
+            var filter = serviceProvider.GetService<INebulaFilter>();
 
             (bool success, T? data, Exception? exception) = await DeSerializer(message, header, jsonSerializerOptions);
             if (!success || data == null)
             {
-                await FallBackHandler(data, header, new Exception($"DeSerializer message failed", exception));
+                var exp = new Exception($"DeSerializer message failed", exception);
+                await NebulaExtension.ExcuteHandlerWithoutException(FallBackHandler(data, header, exp),
+                    filter?.FallBackHandle(data, header, exp));
                 return;
             }
 
             if (message.IsEmpty)
             {
-                await NebulaExtension.ExcuteWithoutException(FallBackHandler(data, header, new Exception($"message is null or empty")));
+                var exp = new Exception($"message is null or empty");
+                await NebulaExtension.ExcuteHandlerWithoutException(FallBackHandler(data, header, exp),
+                    filter?.FallBackHandle(data, header, exp));
                 return;
             }
 
@@ -82,7 +87,9 @@ namespace NebulaBus
                 if (retryCount > MaxRetryCount)
                     return;
 
-                await NebulaExtension.ExcuteWithoutException(BeforeHandler(data, header));
+                var res = await NebulaExtension.ExcuteBeforeHandlerWithoutException(BeforeHandler(data, header),
+                    filter?.BeforeHandle(data, header));
+                if (!res) return;
                 //首次执行若发生异常直接重试三次
                 if (retryCount == 0)
                 {
@@ -92,7 +99,6 @@ namespace NebulaBus
                 {
                     await Handle(data, header);
                 }
-                await NebulaExtension.ExcuteWithoutException(AfterHandler(data, header));
             }
             catch (Exception ex)
             {
@@ -101,7 +107,8 @@ namespace NebulaBus
                 //no retry
                 if (MaxRetryCount == 0)
                 {
-                    await FallBackHandler(data, header, ex);
+                    await NebulaExtension.ExcuteHandlerWithoutException(FallBackHandler(data, header, ex),
+                        filter?.FallBackHandle(data, header, ex));
                     return;
                 }
 
@@ -126,7 +133,8 @@ namespace NebulaBus
                 //out of retry count
                 if (retryCount >= MaxRetryCount)
                 {
-                    await FallBackHandler(data, header, ex);
+                    await NebulaExtension.ExcuteHandlerWithoutException(FallBackHandler(data, header, ex),
+                        filter?.FallBackHandle(data, header, ex));
                     return;
                 }
 
@@ -141,6 +149,11 @@ namespace NebulaBus
                     TriggerTime = DateTimeOffset.Now.AddSeconds(RetryInterval.TotalSeconds).ToUnixTimeSeconds(),
                     Transport = header[NebulaHeader.Transport]
                 });
+            }
+            finally
+            {
+                await NebulaExtension.ExcuteHandlerWithoutException(AfterHandler(data, header),
+                    filter?.AfterHandle(data, header));
             }
         }
 
