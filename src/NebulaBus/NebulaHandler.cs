@@ -66,11 +66,13 @@ namespace NebulaBus
                 await FallBackHandler(data, header, new Exception($"DeSerializer message failed", exception));
                 return;
             }
+
             if (message.IsEmpty)
             {
                 await FallBackHandler(data, header, new Exception($"message is null or empty"));
                 return;
             }
+
             header[NebulaHeader.Consumer] = $"{Environment.MachineName}.{Assembly.GetEntryAssembly().GetName().Name}";
             header[NebulaHeader.Name] = Name;
             header[NebulaHeader.Group] = Group;
@@ -83,10 +85,7 @@ namespace NebulaBus
                 //首次执行若发生异常直接重试三次
                 if (retryCount == 0)
                 {
-                    await DirectRetryExecute(async () =>
-                    {
-                        await Handle(data, header);
-                    });
+                    await DirectRetryExecute(async () => { await Handle(data, header); });
                 }
                 else
                 {
@@ -115,8 +114,9 @@ namespace NebulaBus
                         Name = Name,
                         Header = header,
                         Message = data,
-                        MessageId = header[NebulaHeader.MessageId]!,
-                        TriggerTime = DateTimeOffset.Now.AddSeconds(RetryDelay.TotalSeconds).ToUnixTimeSeconds()
+                        MessageId = header.GetMessageId(),
+                        TriggerTime = DateTimeOffset.Now.AddSeconds(RetryDelay.TotalSeconds).ToUnixTimeSeconds(),
+                        Transport = header[NebulaHeader.Transport]
                     });
                     return;
                 }
@@ -135,8 +135,9 @@ namespace NebulaBus
                     Name = Name,
                     Header = header,
                     Message = data,
-                    MessageId = header[NebulaHeader.MessageId]!,
-                    TriggerTime = DateTimeOffset.Now.AddSeconds(RetryInterval.TotalSeconds).ToUnixTimeSeconds()
+                    MessageId = header.GetMessageId(),
+                    TriggerTime = DateTimeOffset.Now.AddSeconds(RetryInterval.TotalSeconds).ToUnixTimeSeconds(),
+                    Transport = header[NebulaHeader.Transport]
                 });
             }
         }
@@ -148,7 +149,8 @@ namespace NebulaBus
             await Task.CompletedTask;
         }
 
-        private async Task<(bool success, T? data, Exception? ex)> DeSerializer(ReadOnlyMemory<byte> message, NebulaHeader header, JsonSerializerOptions jsonSerializerOptions)
+        private async Task<(bool success, T? data, Exception? ex)> DeSerializer(ReadOnlyMemory<byte> message,
+            NebulaHeader header, JsonSerializerOptions jsonSerializerOptions)
         {
             try
             {

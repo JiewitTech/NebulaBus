@@ -30,6 +30,7 @@ namespace NebulaBus
             var header = BuildNebulaHeader<T>(nameOrGroup);
             foreach (var processor in _processors)
             {
+                header[NebulaHeader.Transport] = processor.Name;
                 await processor.Publish(nameOrGroup, message, header);
             }
         }
@@ -40,6 +41,7 @@ namespace NebulaBus
             var header = BuildNebulaHeader<T>(nameOrGroup, headers);
             foreach (var processor in _processors)
             {
+                header[NebulaHeader.Transport] = processor.Name;
                 await processor.Publish(nameOrGroup, message, header);
             }
         }

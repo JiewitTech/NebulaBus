@@ -28,16 +28,17 @@ namespace NebulaBus.Store.Redis
         public void Add(DelayStoreMessage delayStoreMessage)
         {
             using var tran = _redisClient.Multi();
-            tran.ZAdd(IndexRedisKey, delayStoreMessage.TriggerTime, $"{delayStoreMessage.MessageId}.{delayStoreMessage.Name}");
-            tran.HSet(RedisKey, $"{delayStoreMessage.MessageId}.{delayStoreMessage.Name}", delayStoreMessage);
+            tran.ZAdd(IndexRedisKey, delayStoreMessage.TriggerTime,delayStoreMessage.GetKey());
+            tran.HSet(RedisKey, delayStoreMessage.GetKey(),
+                delayStoreMessage);
             tran.Exec();
         }
 
         public void Delete(DelayStoreMessage delayStoreMessage)
         {
             using var tran = _redisClient.Multi();
-            tran.ZRem(IndexRedisKey, $"{delayStoreMessage.MessageId}.{delayStoreMessage.Name}");
-            tran.HDel(RedisKey, $"{delayStoreMessage.MessageId}.{delayStoreMessage.Name}");
+            tran.ZRem(IndexRedisKey, delayStoreMessage.GetKey());
+            tran.HDel(RedisKey, delayStoreMessage.GetKey());
             tran.Exec();
         }
 
@@ -54,6 +55,7 @@ namespace NebulaBus.Store.Redis
                     RemoveKey(keys[i]);
                 }
             }
+
             return result.Where(x => x != null).ToArray();
         }
 
@@ -68,7 +70,7 @@ namespace NebulaBus.Store.Redis
         public bool Lock(string value)
         {
             var val = _redisClient.Get<string>(LockKey);
-            if(val==value) return true;
+            if (val == value) return true;
             return _redisClient.SetNx(LockKey, value, 3);
         }
 
@@ -92,7 +94,8 @@ namespace NebulaBus.Store.Redis
                 _redisClientLock?.Dispose();
             }
             catch
-            { }
+            {
+            }
         }
     }
 }

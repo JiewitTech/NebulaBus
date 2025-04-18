@@ -3,6 +3,7 @@ using NebulaBus.Store;
 using Quartz;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
 
@@ -36,11 +37,22 @@ namespace NebulaBus.Scheduler
                 if (string.IsNullOrEmpty(data)) return;
                 var messageData = JsonSerializer.Deserialize<DelayStoreMessage>(data, _serializerOptions);
                 if (messageData == null) return;
-                foreach (var processor in _processors)
+                if (string.IsNullOrEmpty(messageData.Transport))
                 {
-                    await processor.Publish(messageData.Name, messageData.Message, messageData.Header);
+                    foreach (var processor in _processors)
+                    {
+                        messageData.Header[NebulaHeader.Transport] = processor.Name;
+                        await processor.Publish(messageData.Name, messageData.Message, messageData.Header);
+                    }
                 }
-
+                else
+                {
+                    var transport = _processors.SingleOrDefault(x => x.Name == messageData.Transport);
+                    if (transport != null)
+                    {
+                        await transport.Publish(messageData.Name, messageData.Message, messageData.Header);
+                    }
+                }
                 _store.Delete(messageData);
             }
             catch (Exception e)

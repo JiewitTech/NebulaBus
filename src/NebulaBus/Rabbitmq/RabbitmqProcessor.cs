@@ -21,6 +21,8 @@ namespace NebulaBus.Rabbitmq
         private readonly IRabbitmqChannelPool _channelPool;
         private CancellationToken _originalCancellationToken;
 
+        public string Name => "Rabbitmq";
+
         public RabbitmqProcessor(
             IServiceProvider serviceProvider,
             IRabbitmqChannelPool rabbitmqChannelPool,
@@ -46,7 +48,8 @@ namespace NebulaBus.Rabbitmq
                 }
             }
             catch
-            { }
+            {
+            }
         }
 
         public async Task Start(CancellationToken cancellationToken)
@@ -98,7 +101,9 @@ namespace NebulaBus.Rabbitmq
             {
                 Name = x.Name,
                 Group = x.Group,
-                ExcuteThreadCount = x.ExecuteThreadCount.HasValue ? x.ExecuteThreadCount.Value : _nebulaOptions.ExecuteThreadCount,
+                ExcuteThreadCount = x.ExecuteThreadCount.HasValue
+                    ? x.ExecuteThreadCount.Value
+                    : _nebulaOptions.ExecuteThreadCount,
                 Type = x.GetType()
             });
 
@@ -114,7 +119,8 @@ namespace NebulaBus.Rabbitmq
             }
         }
 
-        private async Task RegisteConsumerByConfig(string name, string group, ushort qos, Type handlerType, CancellationToken cancellationToken)
+        private async Task RegisteConsumerByConfig(string name, string group, ushort qos, Type handlerType,
+            CancellationToken cancellationToken)
         {
             var channel = await _channelPool.GetChannelAsync(cancellationToken);
             _channels.Add(channel);
