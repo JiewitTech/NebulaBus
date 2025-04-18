@@ -69,7 +69,7 @@ namespace NebulaBus
 
             if (message.IsEmpty)
             {
-                await FallBackHandler(data, header, new Exception($"message is null or empty"));
+                await NebulaExtension.ExcuteWithoutException(FallBackHandler(data, header, new Exception($"message is null or empty")));
                 return;
             }
 
@@ -82,6 +82,7 @@ namespace NebulaBus
                 if (retryCount > MaxRetryCount)
                     return;
 
+                await NebulaExtension.ExcuteWithoutException(BeforeHandler(data, header));
                 //首次执行若发生异常直接重试三次
                 if (retryCount == 0)
                 {
@@ -91,6 +92,7 @@ namespace NebulaBus
                 {
                     await Handle(data, header);
                 }
+                await NebulaExtension.ExcuteWithoutException(AfterHandler(data, header));
             }
             catch (Exception ex)
             {
@@ -145,6 +147,16 @@ namespace NebulaBus
         protected abstract Task Handle(T message, NebulaHeader header);
 
         protected virtual async Task FallBackHandler(T? message, NebulaHeader header, Exception exception)
+        {
+            await Task.CompletedTask;
+        }
+
+        protected virtual async Task<bool> BeforeHandler(T? message, NebulaHeader header)
+        {
+            return await Task.FromResult(true);
+        }
+
+        protected virtual async Task AfterHandler(T? message, NebulaHeader header)
         {
             await Task.CompletedTask;
         }
