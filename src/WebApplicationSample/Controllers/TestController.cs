@@ -110,5 +110,33 @@ namespace WebApplicationSample.Controllers
             }
             await Task.WhenAll(tasks);
         }
+        
+        [HttpGet("SendToFallBack")]
+        public async Task SendToFallBack()
+        {
+            _logger.LogInformation($"{DateTime.Now} Start send Message");
+            await _bus.PublishAsync(nameof(TestFallbackHandler), new TestMessage { Message = "Hello World" });
+        }
+        
+        [HttpGet("SendToFilterHandler")]
+        public async Task SendToFilterHandler()
+        {
+            _logger.LogInformation($"{DateTime.Now} Start send Message");
+            await _bus.PublishAsync(nameof(TestFilterHandler), new TestMessage { Message = "Hello World" });
+        }
+                
+        [HttpGet("SendToFilterHandlerV2")]
+        public async Task SendToFilterHandlerV2()
+        {
+            _logger.LogInformation($"{DateTime.Now} Start send Message");
+            await _bus.PublishAsync(nameof(TestFilterHandlerV2), new TestMessage { Message = "Hello World" });
+        }
+        
+        [HttpGet("SendToGlobalFilterHandler")]
+        public async Task SendToGlobalFilterHandler()
+        {
+            _logger.LogInformation($"{DateTime.Now} Start send Message");
+            await _bus.PublishAsync(nameof(TestGlobalFilterHandler), new TestMessage { Message = "Hello World" });
+        }
     }
 }

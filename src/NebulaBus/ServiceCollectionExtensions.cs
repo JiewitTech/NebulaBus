@@ -46,15 +46,18 @@ namespace Microsoft.Extensions.DependencyInjection
                 RedisClient freeRedisClient;
                 if (options.RedisConnectionString.Contains(";"))
                 {
-                    var connectionStringBuilders = options.RedisConnectionString.Split(";").Select(x => ConnectionStringBuilder.Parse(x)).ToArray();
+                    var connectionStringBuilders = options.RedisConnectionString.Split(";")
+                        .Select(x => ConnectionStringBuilder.Parse(x)).ToArray();
                     freeRedisClient = new RedisClient(connectionStringBuilders);
                 }
                 else
                 {
                     freeRedisClient = new RedisClient(options.RedisConnectionString);
                 }
+
                 freeRedisClient.Serialize = obj => JsonSerializer.Serialize(obj, options.JsonSerializerOptions);
-                freeRedisClient.Deserialize = (json, type) => JsonSerializer.Deserialize(json, type, options.JsonSerializerOptions);
+                freeRedisClient.Deserialize = (json, type) =>
+                    JsonSerializer.Deserialize(json, type, options.JsonSerializerOptions);
                 services.AddKeyedSingleton("NebulaBusRedis", freeRedisClient);
                 services.AddSingleton<IStore, RedisStore>();
             }
@@ -83,12 +86,19 @@ namespace Microsoft.Extensions.DependencyInjection
 
         public static void AddNebulaBusHandler(this IServiceCollection services, params Assembly[] assemblies)
         {
-            var types = assemblies.SelectMany(x => x.GetTypes().Where(t => t.IsClass && !t.IsAbstract && typeof(INebulaHandler).IsAssignableFrom(t)));
+            var types = assemblies.SelectMany(x =>
+                x.GetTypes().Where(t => t.IsClass && !t.IsAbstract && typeof(INebulaHandler).IsAssignableFrom(t)));
             foreach (var typeItem in types)
             {
                 services.TryAddEnumerable(ServiceDescriptor.Transient(typeof(INebulaHandler), typeItem));
                 services.TryAddTransient(typeItem);
             }
+        }
+
+        public static void AddNebulaBusFilter<T>(this IServiceCollection services)
+            where T : class, INebulaFilter
+        {
+            services.TryAddTransient<INebulaFilter, T>();
         }
     }
 }

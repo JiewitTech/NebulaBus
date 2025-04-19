@@ -5,28 +5,28 @@ namespace NebulaBus
 {
     internal static class NebulaExtension
     {
-        public static async Task ExcuteWithoutException(Task action)
+        public static async Task ExcuteWithoutException(Func<Task?> action)
         {
             try
             {
-                await action;
+                await action?.Invoke();
             }
             catch
             {
             }
         }
 
-        public static async Task ExcuteHandlerWithoutException(Task action, Task? realAction)
+        public static async Task ExcuteHandlerWithoutException(Func<Task> action, Func<Task?> action2)
         {
             try
             {
-                await action;
+                await action();
             }
             catch (NotImplementedException)
             {
-                if (realAction != null)
+                if (action2 != null)
                 {
-                    await ExcuteWithoutException(realAction);
+                    await ExcuteWithoutException(action2);
                 }
             }
             catch
@@ -34,11 +34,11 @@ namespace NebulaBus
             }
         }
 
-        public static async Task<bool> ExcuteBeforeHandlerWithoutException(Task<bool> action)
+        public static async Task<bool> ExcuteBeforeHandlerWithoutException(Func<Task<bool>> action)
         {
             try
             {
-                return await action;
+                return await action();
             }
             catch
             {
@@ -46,17 +46,17 @@ namespace NebulaBus
             }
         }
         
-        public static async Task<bool> ExcuteBeforeHandlerWithoutException(Task<bool> action, Task<bool>? realAction)
+        public static async Task<bool> ExcuteBeforeHandlerWithoutException(Func<Task<bool>> action, Func<Task<bool>> action2)
         {
             try
             {
-                return await action;
+                return await action();
             }
             catch (NotImplementedException)
             {
-                if (realAction != null)
+                if (action2 != null)
                 {
-                    return await ExcuteBeforeHandlerWithoutException(realAction);
+                    return await ExcuteBeforeHandlerWithoutException(action2);
                 }
 
                 return true;
