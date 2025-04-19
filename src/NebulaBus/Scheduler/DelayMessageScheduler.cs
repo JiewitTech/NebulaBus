@@ -27,12 +27,12 @@ namespace NebulaBus.Scheduler
             _serializerOptions = serviceProvider.GetRequiredService<NebulaOptions>().JsonSerializerOptions;
         }
 
-        public void Schedule(DelayStoreMessage delayMessage)
+        public void Schedule(NebulaStoreMessage nebulaMessage)
         {
-            if (string.IsNullOrEmpty(delayMessage.MessageId))
+            if (string.IsNullOrEmpty(nebulaMessage.MessageId))
                 return;
 
-            _store.Add(delayMessage);
+            _store.Add(nebulaMessage);
         }
 
         public async Task StartSchedule(CancellationToken cancellationToken)
@@ -90,14 +90,14 @@ namespace NebulaBus.Scheduler
             _store.RefreshLock();
         }
 
-        private IJobDetail BuildJobDetail(DelayStoreMessage delayMessage)
+        private IJobDetail BuildJobDetail(NebulaStoreMessage nebulaMessage)
         {
             var job = JobBuilder.Create<DelayMessageSendJob>()
-                .WithIdentity($"NebulaBusJob:{delayMessage.MessageId}.{delayMessage.Name}")
-                .UsingJobData("data", JsonSerializer.Serialize(delayMessage, _serializerOptions))
-                .UsingJobData("messageId", delayMessage.MessageId)
-                .UsingJobData("name", delayMessage.Name)
-                .UsingJobData("requestId", delayMessage.Header[NebulaHeader.RequestId])
+                .WithIdentity($"NebulaBusJob:{nebulaMessage.MessageId}.{nebulaMessage.Name}")
+                .UsingJobData("data", JsonSerializer.Serialize(nebulaMessage, _serializerOptions))
+                .UsingJobData("messageId", nebulaMessage.MessageId)
+                .UsingJobData("name", nebulaMessage.Name)
+                .UsingJobData("requestId", nebulaMessage.Header[NebulaHeader.RequestId])
                 .Build();
             return job;
         }

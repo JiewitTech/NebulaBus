@@ -6,25 +6,25 @@ namespace NebulaBus.Store.Memory
 {
     internal class MemoryStore : IStore
     {
-        private readonly ConcurrentDictionary<string, DelayStoreMessage> _storeMessages;
+        private readonly ConcurrentDictionary<string, NebulaStoreMessage> _storeMessages;
 
         public MemoryStore()
         {
-            _storeMessages = new ConcurrentDictionary<string, DelayStoreMessage>();
+            _storeMessages = new ConcurrentDictionary<string, NebulaStoreMessage>();
         }
 
-        public void Add(DelayStoreMessage delayStoreMessage)
+        public void Add(NebulaStoreMessage nebulaStoreMessage)
         {
-            _storeMessages.AddOrUpdate($"{delayStoreMessage.MessageId}.{delayStoreMessage.Name}", c => delayStoreMessage,
-                (c, o) => delayStoreMessage);
+            _storeMessages.AddOrUpdate($"{nebulaStoreMessage.MessageId}.{nebulaStoreMessage.Name}", c => nebulaStoreMessage,
+                (c, o) => nebulaStoreMessage);
         }
 
-        public void Delete(DelayStoreMessage delayStoreMessage)
+        public void Delete(NebulaStoreMessage nebulaStoreMessage)
         {
-            _storeMessages.TryRemove($"{delayStoreMessage.MessageId}.{delayStoreMessage.Name}", out _);
+            _storeMessages.TryRemove($"{nebulaStoreMessage.MessageId}.{nebulaStoreMessage.Name}", out _);
         }
 
-        public async Task<DelayStoreMessage[]?> Get(long beforeTimestamp)
+        public async Task<NebulaStoreMessage[]?> Get(long beforeTimestamp)
         {
             var result = _storeMessages.Values.ToArray();
             return await Task.FromResult(result);

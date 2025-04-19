@@ -35,7 +35,7 @@ namespace NebulaBus.Scheduler
             {
                 var data = context.JobDetail.JobDataMap.GetString("data");
                 if (string.IsNullOrEmpty(data)) return;
-                var messageData = JsonSerializer.Deserialize<DelayStoreMessage>(data, _serializerOptions);
+                var messageData = JsonSerializer.Deserialize<NebulaStoreMessage>(data, _serializerOptions);
                 if (messageData == null) return;
                 if (string.IsNullOrEmpty(messageData.Transport))
                 {

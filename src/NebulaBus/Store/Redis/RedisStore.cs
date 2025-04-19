@@ -25,28 +25,28 @@ namespace NebulaBus.Store.Redis
             _logger = logger;
         }
 
-        public void Add(DelayStoreMessage delayStoreMessage)
+        public void Add(NebulaStoreMessage nebulaStoreMessage)
         {
             using var tran = _redisClient.Multi();
-            tran.ZAdd(IndexRedisKey, delayStoreMessage.TriggerTime,delayStoreMessage.GetKey());
-            tran.HSet(RedisKey, delayStoreMessage.GetKey(),
-                delayStoreMessage);
+            tran.ZAdd(IndexRedisKey, nebulaStoreMessage.TriggerTime,nebulaStoreMessage.GetKey());
+            tran.HSet(RedisKey, nebulaStoreMessage.GetKey(),
+                nebulaStoreMessage);
             tran.Exec();
         }
 
-        public void Delete(DelayStoreMessage delayStoreMessage)
+        public void Delete(NebulaStoreMessage nebulaStoreMessage)
         {
             using var tran = _redisClient.Multi();
-            tran.ZRem(IndexRedisKey, delayStoreMessage.GetKey());
-            tran.HDel(RedisKey, delayStoreMessage.GetKey());
+            tran.ZRem(IndexRedisKey, nebulaStoreMessage.GetKey());
+            tran.HDel(RedisKey, nebulaStoreMessage.GetKey());
             tran.Exec();
         }
 
-        public async Task<DelayStoreMessage[]?> Get(long beforeTimestamp)
+        public async Task<NebulaStoreMessage[]?> Get(long beforeTimestamp)
         {
             var keys = _redisClient.ZRangeByScore(IndexRedisKey, 0, beforeTimestamp);
             if (keys == null || keys.Length == 0) return null;
-            var result = await _redisClient.HMGetAsync<DelayStoreMessage>(RedisKey, keys!);
+            var result = await _redisClient.HMGetAsync<NebulaStoreMessage>(RedisKey, keys!);
             //排除为空的值并删除
             for (var i = 0; i < keys.Length; i++)
             {
