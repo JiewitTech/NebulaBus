@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace NebulaBus
 {
-    internal interface INebulaHandler
+    public interface INebulaHandler
     {
         public string Name { get; }
         public string Group { get; }
@@ -26,7 +26,7 @@ namespace NebulaBus
         public virtual int MaxRetryCount => 10;
         public virtual byte? ExecuteThreadCount => null;
 
-        internal abstract Task Excute(
+        public abstract Task Excute(
             IServiceProvider serviceProvider,
             ReadOnlyMemory<byte> message,
             NebulaHeader header);
@@ -52,7 +52,7 @@ namespace NebulaBus
     public abstract class NebulaHandler<T> : NebulaHandler
         where T : class, new()
     {
-        internal override async Task Excute(
+        public override async Task Excute(
             IServiceProvider serviceProvider,
             ReadOnlyMemory<byte> message,
             NebulaHeader header)

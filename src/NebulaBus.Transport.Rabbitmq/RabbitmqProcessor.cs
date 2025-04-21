@@ -8,11 +8,11 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace NebulaBus.Rabbitmq
+namespace NebulaBus.Transport.Rabbitmq
 {
     internal class RabbitmqProcessor : IProcessor
     {
-        private readonly RabbitmqOptions _rabbitmqOptions;
+        private readonly NebulaRabbitmqOptions _rabbitmqOptions;
         private readonly List<IChannel> _channels;
         private readonly ILogger<RabbitmqProcessor> _logger;
         private readonly IServiceProvider _serviceProvider;
@@ -26,12 +26,13 @@ namespace NebulaBus.Rabbitmq
         public RabbitmqProcessor(
             IServiceProvider serviceProvider,
             IRabbitmqChannelPool rabbitmqChannelPool,
+            NebulaRabbitmqOptions nebulaRabbitmqOptions,
             NebulaOptions nebulaOptions,
             ILogger<RabbitmqProcessor> logger)
         {
             _serviceProvider = serviceProvider;
             _nebulaOptions = nebulaOptions;
-            _rabbitmqOptions = nebulaOptions.RabbitmqOptions;
+            _rabbitmqOptions = nebulaRabbitmqOptions;
             _channels = new List<IChannel>();
             _logger = logger;
             _channelPool = rabbitmqChannelPool;

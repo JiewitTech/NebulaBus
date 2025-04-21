@@ -1,5 +1,4 @@
 ﻿using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using RabbitMQ.Client;
 using System;
 using System.Collections.Concurrent;
@@ -7,22 +6,25 @@ using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace NebulaBus.Rabbitmq
+namespace NebulaBus.Transport.Rabbitmq
 {
     internal class RabbitmqChannelPool : IRabbitmqChannelPool, IDisposable
     {
         private readonly ConcurrentQueue<IChannel> _channelPool;
         private readonly SemaphoreSlim _semaphore;
-        private readonly RabbitmqOptions _rabbitmqOptions;
+        private readonly NebulaRabbitmqOptions _rabbitmqOptions;
         private readonly ILogger<RabbitmqChannelPool> _logger;
         private readonly int _maxPoolSize = 10;
         private readonly ConnectionFactory _connectionFactory;
         private IConnection _connection;
-        public RabbitmqChannelPool(NebulaOptions nebulaOptions, ILogger<RabbitmqChannelPool> logger)
+
+        public RabbitmqChannelPool(NebulaOptions nebulaOptions,
+            NebulaRabbitmqOptions nebulaRabbitmqOptions,
+            ILogger<RabbitmqChannelPool> logger)
         {
             _channelPool = new ConcurrentQueue<IChannel>();
             _semaphore = new SemaphoreSlim(1, 1);
-            _rabbitmqOptions = nebulaOptions.RabbitmqOptions;
+            _rabbitmqOptions = nebulaRabbitmqOptions;
             _logger = logger;
             _connectionFactory = new ConnectionFactory()
             {
@@ -31,7 +33,8 @@ namespace NebulaBus.Rabbitmq
                 VirtualHost = _rabbitmqOptions.VirtualHost,
                 AutomaticRecoveryEnabled = true,
                 Port = _rabbitmqOptions.Port,
-                ClientProvidedName = $"NebulaBus:{Environment.MachineName}.{Assembly.GetEntryAssembly().GetName().Name}",
+                ClientProvidedName =
+                    $"NebulaBus:{Environment.MachineName}.{Assembly.GetEntryAssembly().GetName().Name}",
                 TopologyRecoveryEnabled = true,
             };
             if (_rabbitmqOptions.SslOption != null)
@@ -48,12 +51,11 @@ namespace NebulaBus.Rabbitmq
                 if (_connection == null || !_connection.IsOpen)
                 {
                     if (_rabbitmqOptions.HostName.Contains(","))
-                        _connection = await _connectionFactory.CreateConnectionAsync(AmqpTcpEndpoint.ParseMultiple(_rabbitmqOptions.HostName), cancellationToken);
+                        _connection = await _connectionFactory.CreateConnectionAsync(
+                            AmqpTcpEndpoint.ParseMultiple(_rabbitmqOptions.HostName), cancellationToken);
                     else _connection = await _connectionFactory.CreateConnectionAsync(cancellationToken);
                 }
-                _connection.ConnectionShutdownAsync+= async (sender, args) =>
-                {
-                };
+
                 return await _connection.CreateChannelAsync(cancellationToken: cancellationToken);
             }
             catch (Exception ex)
@@ -82,6 +84,7 @@ namespace NebulaBus.Rabbitmq
                 _channelPool.Enqueue(channel);
                 return;
             }
+
             await channel.CloseAsync();
             await channel.DisposeAsync();
         }

@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 
 namespace NebulaBus.Store
 {
-    internal interface IStore : IDisposable
+    public interface IStore : IDisposable
     {
         void Add(NebulaStoreMessage nebulaStoreMessage);
         void Delete(NebulaStoreMessage nebulaStoreMessage);

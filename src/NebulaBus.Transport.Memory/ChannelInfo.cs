@@ -1,8 +1,8 @@
 using System.Threading.Channels;
 
-namespace NebulaBus.Memory
+namespace NebulaBus.Transport.Memory
 {
-    public class ChannelInfo
+    internal class ChannelInfo
     {
         public string Name { get; set; }
         public string Group { get; set; }

@@ -1,8 +1,8 @@
-﻿using RabbitMQ.Client;
 using System.Threading;
 using System.Threading.Tasks;
+using RabbitMQ.Client;
 
-namespace NebulaBus.Rabbitmq
+namespace NebulaBus.Transport.Rabbitmq
 {
     internal interface IRabbitmqChannelPool
     {

@@ -12,6 +12,8 @@
 
   <ItemGroup>
     <ProjectReference Include="..\MessageLibrary\MessageLibrary.csproj" />
+    <ProjectReference Include="..\NebulaBus.Store.Redis\NebulaBus.Store.Redis.csproj" />
+    <ProjectReference Include="..\NebulaBus.Transport.Rabbitmq\NebulaBus.Transport.Rabbitmq.csproj" />
     <ProjectReference Include="..\NebulaBus\NebulaBus.csproj" />
   </ItemGroup>
 

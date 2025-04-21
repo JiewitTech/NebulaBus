@@ -8,9 +8,9 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
-namespace NebulaBus.Memory
+namespace NebulaBus.Transport.Memory
 {
-    public class MemoryProcessor : IProcessor
+    internal class MemoryProcessor : IProcessor
     {
         public string Name => "Memory";
         private readonly NebulaOptions _nebulaOptions;
@@ -61,7 +61,7 @@ namespace NebulaBus.Memory
                 var channelInfo =
                     _channelInfos.FirstOrDefault(x => x.Name == handlerInfo.Name && x.Group == handlerInfo.Group);
                 if (channelInfo == null) continue;
-                RegistChannelConsumer(channelInfo, handlerInfo.Type, cancellationToken);
+                RegistChannelConsumer(channelInfo, handlerInfo, cancellationToken);
             }
 
             await Task.CompletedTask;
@@ -88,7 +88,7 @@ namespace NebulaBus.Memory
             }
         }
 
-        private void RegistChannelConsumer(ChannelInfo channelInfo, Type handlerType,
+        private void RegistChannelConsumer(ChannelInfo channelInfo, HandlerInfo handlerInfo,
             CancellationToken cancellationToken)
         {
             for (int i = 0; i < _nebulaOptions.ExecuteThreadCount; i++)
@@ -100,7 +100,7 @@ namespace NebulaBus.Memory
                         if (channelInfo.Channel.Reader.TryRead(out var item))
                         {
                             using var scope = _serviceProvider.CreateScope();
-                            var handler = scope.ServiceProvider.GetService(handlerType) as NebulaHandler;
+                            var handler = scope.ServiceProvider.GetService(handlerInfo.Type) as NebulaHandler;
                             if (handler != null)
                             {
                                 handler.Excute(scope.ServiceProvider, item.body, item.header).Wait();

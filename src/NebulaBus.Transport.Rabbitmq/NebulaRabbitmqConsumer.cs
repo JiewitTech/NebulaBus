@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace NebulaBus.Rabbitmq
+namespace NebulaBus.Transport.Rabbitmq
 {
     internal class NebulaRabbitmqConsumer : AsyncDefaultBasicConsumer
     {

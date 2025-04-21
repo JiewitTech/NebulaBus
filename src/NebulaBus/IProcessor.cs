@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 
 namespace NebulaBus
 {
-    internal interface IProcessor : IDisposable
+    public interface IProcessor : IDisposable
     {
         string Name { get; }
         Task Start(CancellationToken cancellationToken);

@@ -1,9 +1,9 @@
-﻿using System;
+using System;
 using RabbitMQ.Client;
 
-namespace NebulaBus.Rabbitmq
+namespace NebulaBus.Transport.Rabbitmq
 {
-    public class RabbitmqOptions
+    public class NebulaRabbitmqOptions
     {
         public string UserName { get; set; } = "guest";
         public string Password { get; set; } = "guest";
@@ -12,10 +12,12 @@ namespace NebulaBus.Rabbitmq
         public int Port { get; set; } = 5672;
         public string ExchangeName { get; set; } = "nebula-bus-exchange";
         public SslOption? SslOption { get; set; } = null;
+
         /// <summary>
         /// 全局预取数
         /// </summary>
         public ushort Qos { get; set; } = 0;
+
         /// <summary>
         /// 动态自定义预取规则
         /// </summary>

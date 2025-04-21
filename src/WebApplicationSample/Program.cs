@@ -21,7 +21,7 @@ builder.Services.AddNebulaBus(options =>
 {
     options.ClusterName = "TestCluster";
     options.UseRedisStore(configuration!.GetConnectionString("RedisConn"));
-    options.UseRabbitmq(rabbitmq =>
+    options.UseRabbitmqTransport(rabbitmq =>
     {
         rabbitmq.HostName = configuration!.GetValue<string>("RabbitMq:HostName");
         rabbitmq.UserName = configuration!.GetValue<string>("RabbitMq:UserName");

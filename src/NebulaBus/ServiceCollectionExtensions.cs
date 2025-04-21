@@ -1,17 +1,11 @@
-﻿using FreeRedis;
-using Microsoft.Extensions.DependencyInjection.Extensions;
+﻿using Microsoft.Extensions.DependencyInjection.Extensions;
 using NebulaBus;
-using NebulaBus.Rabbitmq;
 using NebulaBus.Scheduler;
-using NebulaBus.Store;
-using NebulaBus.Store.Memory;
-using NebulaBus.Store.Redis;
 using Quartz;
 using Quartz.Spi;
 using System;
 using System.Linq;
 using System.Reflection;
-using System.Text.Json;
 
 namespace Microsoft.Extensions.DependencyInjection
 {
@@ -27,12 +21,6 @@ namespace Microsoft.Extensions.DependencyInjection
             services.AddSingleton(options);
             services.AddSingleton<INebulaBus, NebulaBusService>();
 
-            //Processor
-            services.TryAddEnumerable(ServiceDescriptor.Singleton<IProcessor, RabbitmqProcessor>());
-
-            //Rabbitmq
-            services.AddSingleton<IRabbitmqChannelPool, RabbitmqChannelPool>();
-
             //Schedule job
             services.AddSingleton<IDelayMessageScheduler, DelayMessageScheduler>();
             services.AddKeyedSingleton<IJobFactory, NebulaBusJobFactory>("NebulaBusJobFactory");
@@ -40,31 +28,9 @@ namespace Microsoft.Extensions.DependencyInjection
 
             services.Configure(setupAction);
 
-            //Delay Message Store
-            if (!string.IsNullOrEmpty(options.RedisConnectionString))
-            {
-                RedisClient freeRedisClient;
-                if (options.RedisConnectionString.Contains(";"))
-                {
-                    var connectionStringBuilders = options.RedisConnectionString.Split(";")
-                        .Select(x => ConnectionStringBuilder.Parse(x)).ToArray();
-                    freeRedisClient = new RedisClient(connectionStringBuilders);
-                }
-                else
-                {
-                    freeRedisClient = new RedisClient(options.RedisConnectionString);
-                }
-
-                freeRedisClient.Serialize = obj => JsonSerializer.Serialize(obj, options.JsonSerializerOptions);
-                freeRedisClient.Deserialize = (json, type) =>
-                    JsonSerializer.Deserialize(json, type, options.JsonSerializerOptions);
-                services.AddKeyedSingleton("NebulaBusRedis", freeRedisClient);
-                services.AddSingleton<IStore, RedisStore>();
-            }
-            else
-            {
-                services.AddSingleton<IStore, MemoryStore>();
-            }
+            //Store and transport
+            foreach (var provider in options.NebulaServiceProviders)
+                provider.ProvideServices(services, options);
 
             services.AddHostedService<Bootstrapper>();
         }
