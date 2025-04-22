@@ -12,6 +12,7 @@ namespace NebulaBus
     {
         public const string RequestId = "nb-request-id";
         public const string MessageId = "nb-message-id";
+        public const string Transport = "nb-transport";
         public const string Sender = "nb-sender";
         public const string Consumer = "nb-consumer";
         public const string SendTimeStamp = "nb-send-timestamp";
@@ -22,7 +23,6 @@ namespace NebulaBus
         public const string RetryCount = "nb-retry-count";
 
         private readonly Dictionary<string, string> _dic;
-
         public string GetRequestId() => this[RequestId];
         public string GetMessageId() => this[MessageId];
         public int GetRetryCount()

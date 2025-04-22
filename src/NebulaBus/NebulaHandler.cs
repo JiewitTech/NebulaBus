@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace NebulaBus
 {
-    internal interface INebulaHandler
+    public interface INebulaHandler
     {
         public string Name { get; }
         public string Group { get; }
@@ -26,7 +26,7 @@ namespace NebulaBus
         public virtual int MaxRetryCount => 10;
         public virtual byte? ExecuteThreadCount => null;
 
-        internal abstract Task Excute(
+        public abstract Task Excute(
             IServiceProvider serviceProvider,
             ReadOnlyMemory<byte> message,
             NebulaHeader header);
@@ -52,25 +52,32 @@ namespace NebulaBus
     public abstract class NebulaHandler<T> : NebulaHandler
         where T : class, new()
     {
-        internal override async Task Excute(
+        public override async Task Excute(
             IServiceProvider serviceProvider,
             ReadOnlyMemory<byte> message,
             NebulaHeader header)
         {
             var delayMessageScheduler = serviceProvider.GetRequiredService<IDelayMessageScheduler>();
             var jsonSerializerOptions = serviceProvider.GetRequiredService<NebulaOptions>().JsonSerializerOptions;
+            var filter = serviceProvider.GetService<INebulaFilter>();
 
             (bool success, T? data, Exception? exception) = await DeSerializer(message, header, jsonSerializerOptions);
             if (!success || data == null)
             {
-                await FallBackHandler(data, header, new Exception($"DeSerializer message failed", exception));
+                var exp = new Exception($"DeSerializer message failed", exception);
+                await NebulaExtension.ExcuteHandlerWithoutException(() => FallBackHandle(data, header, exp),
+                    () => filter?.FallBackHandle(data, header, exp));
                 return;
             }
+
             if (message.IsEmpty)
             {
-                await FallBackHandler(data, header, new Exception($"message is null or empty"));
+                var exp = new Exception($"message is null or empty");
+                await NebulaExtension.ExcuteHandlerWithoutException(() => FallBackHandle(data, header, exp),
+                    () => filter?.FallBackHandle(data, header, exp));
                 return;
             }
+
             header[NebulaHeader.Consumer] = $"{Environment.MachineName}.{Assembly.GetEntryAssembly().GetName().Name}";
             header[NebulaHeader.Name] = Name;
             header[NebulaHeader.Group] = Group;
@@ -80,13 +87,13 @@ namespace NebulaBus
                 if (retryCount > MaxRetryCount)
                     return;
 
+                var res = await NebulaExtension.ExcuteBeforeHandlerWithoutException(() => BeforeHandle(data, header),
+                    () => filter?.BeforeHandle(data, header));
+                if (!res) return;
                 //首次执行若发生异常直接重试三次
                 if (retryCount == 0)
                 {
-                    await DirectRetryExecute(async () =>
-                    {
-                        await Handle(data, header);
-                    });
+                    await DirectRetryExecute(async () => { await Handle(data, header); });
                 }
                 else
                 {
@@ -100,7 +107,8 @@ namespace NebulaBus
                 //no retry
                 if (MaxRetryCount == 0)
                 {
-                    await FallBackHandler(data, header, ex);
+                    await NebulaExtension.ExcuteHandlerWithoutException(() => FallBackHandle(data, header, ex),
+                        () => filter?.FallBackHandle(data, header, ex));
                     return;
                 }
 
@@ -109,14 +117,15 @@ namespace NebulaBus
                 //First Time to retry，use retry delay
                 if (retryCount == 0)
                 {
-                    delayMessageScheduler.Schedule(new Store.DelayStoreMessage()
+                    delayMessageScheduler.Schedule(new Store.NebulaStoreMessage()
                     {
                         Group = Group,
                         Name = Name,
                         Header = header,
                         Message = data,
-                        MessageId = header[NebulaHeader.MessageId]!,
-                        TriggerTime = DateTimeOffset.Now.AddSeconds(RetryDelay.TotalSeconds).ToUnixTimeSeconds()
+                        MessageId = header.GetMessageId(),
+                        TriggerTime = DateTimeOffset.Now.AddSeconds(RetryDelay.TotalSeconds).ToUnixTimeSeconds(),
+                        Transport = header[NebulaHeader.Transport]
                     });
                     return;
                 }
@@ -124,31 +133,49 @@ namespace NebulaBus
                 //out of retry count
                 if (retryCount >= MaxRetryCount)
                 {
-                    await FallBackHandler(data, header, ex);
+                    await NebulaExtension.ExcuteHandlerWithoutException(() => FallBackHandle(data, header, ex),
+                        () => filter?.FallBackHandle(data, header, ex));
                     return;
                 }
 
                 //Interval Retry
-                delayMessageScheduler.Schedule(new Store.DelayStoreMessage()
+                delayMessageScheduler.Schedule(new Store.NebulaStoreMessage()
                 {
                     Group = Group,
                     Name = Name,
                     Header = header,
                     Message = data,
-                    MessageId = header[NebulaHeader.MessageId]!,
-                    TriggerTime = DateTimeOffset.Now.AddSeconds(RetryInterval.TotalSeconds).ToUnixTimeSeconds()
+                    MessageId = header.GetMessageId(),
+                    TriggerTime = DateTimeOffset.Now.AddSeconds(RetryInterval.TotalSeconds).ToUnixTimeSeconds(),
+                    Transport = header[NebulaHeader.Transport]
                 });
+            }
+            finally
+            {
+                await NebulaExtension.ExcuteHandlerWithoutException(() => AfterHandle(data, header),
+                    () => filter?.AfterHandle(data, header));
             }
         }
 
         protected abstract Task Handle(T message, NebulaHeader header);
 
-        protected virtual async Task FallBackHandler(T? message, NebulaHeader header, Exception exception)
+        protected virtual Task FallBackHandle(T? message, NebulaHeader header, Exception exception)
         {
-            await Task.CompletedTask;
+            throw new NotImplementedException();
         }
 
-        private async Task<(bool success, T? data, Exception? ex)> DeSerializer(ReadOnlyMemory<byte> message, NebulaHeader header, JsonSerializerOptions jsonSerializerOptions)
+        protected virtual Task<bool> BeforeHandle(T? message, NebulaHeader header)
+        {
+            throw new NotImplementedException();
+        }
+
+        protected virtual Task AfterHandle(T? message, NebulaHeader header)
+        {
+            throw new NotImplementedException();
+        }
+
+        private async Task<(bool success, T? data, Exception? ex)> DeSerializer(ReadOnlyMemory<byte> message,
+            NebulaHeader header, JsonSerializerOptions jsonSerializerOptions)
         {
             try
             {
@@ -157,7 +184,7 @@ namespace NebulaBus
             }
             catch (Exception ex)
             {
-                await FallBackHandler(new T(), header, ex);
+                await FallBackHandle(new T(), header, ex);
                 return (false, null, ex);
             }
         }

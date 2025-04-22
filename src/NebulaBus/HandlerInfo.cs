@@ -2,7 +2,7 @@
 
 namespace NebulaBus
 {
-    internal class HandlerInfo
+    public class HandlerInfo
     {
         public string Name { get; set; }
         public string Group { get; set; }
