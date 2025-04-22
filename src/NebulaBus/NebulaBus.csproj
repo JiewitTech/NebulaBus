@@ -5,7 +5,7 @@
     <RepositoryUrl>https://github.com/JiewitTech/NebulaBus.git</RepositoryUrl>
     <PackageProjectUrl>https://github.com/JiewitTech/NebulaBus</PackageProjectUrl>
     <Description>NebulaBus - Future oriented NET distributed event bus framework, allowing developers to focus on development</Description>
-    <PackageTags>NebulaBus enventbus</PackageTags>
+    <PackageTags>NebulaBus enventbus Bus Event Publish</PackageTags>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageVersion>$(PackageVersion)</PackageVersion>
