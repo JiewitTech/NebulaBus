@@ -15,7 +15,10 @@ namespace NebulaBus.Transport.Rabbitmq
 
         public void ProvideServices(IServiceCollection services, NebulaOptions options)
         {
+            var rabbitmqOptions = new NebulaRabbitmqOptions();
             services.AddOptions<NebulaRabbitmqOptions>().Configure(_configure);
+            _configure(rabbitmqOptions);
+            services.AddSingleton(rabbitmqOptions);
 
             //Processor
             services.TryAddEnumerable(ServiceDescriptor.Singleton<IProcessor, RabbitmqProcessor>());

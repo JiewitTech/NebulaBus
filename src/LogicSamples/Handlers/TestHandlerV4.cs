@@ -1,7 +1,7 @@
 ﻿using MessageLibrary;
 using NebulaBus;
 
-namespace WebApplicationSample.Handlers
+namespace LogicSamples.Handlers
 {
     public class TestHandlerV4 : NebulaHandler<TestMessage>
     {
@@ -11,7 +11,8 @@ namespace WebApplicationSample.Handlers
 
         protected override async Task Handle(TestMessage message, NebulaHeader header)
         {
-            Console.WriteLine($"{DateTime.Now} [{Name}]Received Message :{message.Message} RetryCount {header.GetRetryCount()}");
+            Console.WriteLine(
+                $"{DateTime.Now} [{Name}]Received Message :{message.Message} RetryCount {header.GetRetryCount()}");
         }
     }
 }

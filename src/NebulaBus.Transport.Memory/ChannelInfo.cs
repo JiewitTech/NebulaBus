@@ -6,6 +6,6 @@ namespace NebulaBus.Transport.Memory
     {
         public string Name { get; set; }
         public string Group { get; set; }
-        public Channel<(NebulaHeader header, byte[] body)> Channel { get; set; }
+        public Channel<(byte[] header, byte[] body)> Channel { get; set; }
     }
 }

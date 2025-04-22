@@ -1,7 +1,7 @@
 using MessageLibrary;
 using NebulaBus;
 
-namespace WebApplicationSample;
+namespace LogicSamples;
 
 public class GlobalHandlerFilter : INebulaFilter
 {

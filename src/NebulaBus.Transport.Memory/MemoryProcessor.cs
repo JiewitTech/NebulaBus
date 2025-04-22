@@ -46,7 +46,7 @@ namespace NebulaBus.Transport.Memory
             //start procedure and consumer
             foreach (var handler in handlerInfos.GroupBy(x => new { x.Name, x.Group }))
             {
-                var channel = Channel.CreateUnbounded<(NebulaHeader header, byte[] body)>();
+                var channel = Channel.CreateUnbounded<(byte[] header, byte[] body)>();
                 _channelInfos.Add(new ChannelInfo()
                 {
                     Name = handler.Key.Name,
@@ -71,15 +71,13 @@ namespace NebulaBus.Transport.Memory
         {
             try
             {
-                var channelInfo =
-                    _channelInfos.FirstOrDefault(x => x.Name == routingKey || x.Group == routingKey);
-                if (channelInfo == null)
-                {
-                    return;
-                }
+                var channelInfoList =
+                    _channelInfos.Where(x => x.Name == routingKey || x.Group == routingKey);
 
                 var jsonBytes = JsonSerializer.SerializeToUtf8Bytes(message, _nebulaOptions.JsonSerializerOptions);
-                await channelInfo.Channel.Writer.WriteAsync((header, jsonBytes));
+                var headerJsonBytes = JsonSerializer.SerializeToUtf8Bytes(header, _nebulaOptions.JsonSerializerOptions);
+                foreach (var channelInfo in channelInfoList)
+                    await channelInfo.Channel.Writer.WriteAsync((headerJsonBytes, jsonBytes));
             }
             catch (Exception ex)
             {
@@ -103,9 +101,13 @@ namespace NebulaBus.Transport.Memory
                             var handler = scope.ServiceProvider.GetService(handlerInfo.Type) as NebulaHandler;
                             if (handler != null)
                             {
-                                handler.Excute(scope.ServiceProvider, item.body, item.header).Wait();
+                                var header = JsonSerializer.Deserialize<NebulaHeader>(item.header,
+                                    _nebulaOptions.JsonSerializerOptions)!;
+                                handler.Excute(scope.ServiceProvider, item.body, header).Wait();
                             }
                         }
+
+                        Thread.Sleep(100);
                     }
                 });
             }

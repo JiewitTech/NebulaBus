@@ -23,7 +23,6 @@ namespace NebulaBus
         public const string RetryCount = "nb-retry-count";
 
         private readonly Dictionary<string, string> _dic;
-
         public string GetRequestId() => this[RequestId];
         public string GetMessageId() => this[MessageId];
         public int GetRetryCount()

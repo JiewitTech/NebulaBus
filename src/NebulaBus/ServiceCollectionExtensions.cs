@@ -22,10 +22,10 @@ namespace Microsoft.Extensions.DependencyInjection
             services.AddSingleton<INebulaBus, NebulaBusService>();
 
             //Schedule job
-            services.AddSingleton<IDelayMessageScheduler, DelayMessageScheduler>();
+            services.AddKeyedTransient<IJob, DelayMessageSendJob>("NebulaBusDelayMessageSendJob");
             services.AddKeyedSingleton<IJobFactory, NebulaBusJobFactory>("NebulaBusJobFactory");
-            services.AddKeyedScoped<IJob, DelayMessageSendJob>("NebulaBusDelayMessageSendJob");
-
+            services.AddSingleton<IDelayMessageScheduler, DelayMessageScheduler>();
+            
             services.Configure(setupAction);
 
             //Store and transport
