@@ -1,3 +1,4 @@
+using System.Text.Json;
 using LogicSamples;
 using LogicSamples.Handlers;
 using NebulaBus.Store.Memory;
@@ -25,9 +26,11 @@ public class Program
         builder.Services.AddSwaggerGen();
         builder.Services.AddNebulaBus(options =>
         {
+            options.ClusterName = "SampleCluster";
+            options.JsonSerializerOptions = new JsonSerializerOptions();
             options.ExecuteThreadCount = 1;
             options.UseMemoryTransport();
-            options.UserMemoryStore();
+            options.UseMemoryStore();
         });
         builder.Services.AddNebulaBusHandler(typeof(TestHandlerV1).Assembly);
         //Add Global Handler Filter
