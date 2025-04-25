@@ -37,8 +37,8 @@
 安装 
 https://www.nuget.org/packages/NebulaBus/ 
 ```
-dotnet add package NebulaBus
-
+dotnet add package NebulaBus.Store.Redis
+dotnet add package NebulaBus.Transport.Rabbitmq
 ```
 
 注入
@@ -48,7 +48,7 @@ builder.Services.AddNebulaBus(options =>
 {
     options.ClusterName = "TestCluster";
     options.UseRedisStore("localhost:6379,password=****,defaultDatabase=0,prefix=prefix_");
-    options.UseRabbitmq(rabbitmq =>
+    options.UseRabbitmqTransport(rabbitmq =>
     {
         rabbitmq.HostName = “localhost”;
         rabbitmq.UserName = “guest”;
