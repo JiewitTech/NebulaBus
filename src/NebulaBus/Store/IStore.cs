@@ -11,5 +11,7 @@ namespace NebulaBus.Store
         void RefreshLock();
         bool Lock(string value);
         void UnLock(string value);
+        void Init()
+        { }
     }
 }

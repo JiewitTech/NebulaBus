@@ -25,7 +25,10 @@ public class Program
         builder.Services.AddNebulaBus(options =>
         {
             options.ClusterName = "TestCluster";
-            options.UseRedisStore(configuration!.GetConnectionString("RedisConn"));
+            options.UseSqlStore(new SqlSugar.ConnectionConfig()
+            {
+                ConnectionString = configuration!.GetConnectionString("SqlConn"),
+            });
             options.UseRabbitmqTransport(rabbitmq =>
             {
                 rabbitmq.HostName = configuration!.GetValue<string>("RabbitMq:HostName");

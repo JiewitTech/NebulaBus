@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\LogicSamples\LogicSamples.csproj" />
+    <ProjectReference Include="..\NebulaBus.Store.Sql\NebulaBus.Store.Sql.csproj" />
+    <ProjectReference Include="..\NebulaBus.Transport.Rabbitmq\NebulaBus.Transport.Rabbitmq.csproj" />
+    <ProjectReference Include="..\WebApplication.Controllers\WebApplication.Controllers.csproj" />
+  </ItemGroup>
+
+</Project>
