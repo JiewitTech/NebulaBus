@@ -28,6 +28,7 @@ public class Program
             options.UseSqlStore(new SqlSugar.ConnectionConfig()
             {
                 ConnectionString = configuration!.GetConnectionString("SqlConn"),
+                DbType=SqlSugar.DbType.MySql
             });
             options.UseRabbitmqTransport(rabbitmq =>
             {

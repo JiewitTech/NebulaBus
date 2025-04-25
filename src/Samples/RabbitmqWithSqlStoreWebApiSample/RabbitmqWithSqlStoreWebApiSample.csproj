@@ -11,9 +11,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\LogicSamples\LogicSamples.csproj" />
-    <ProjectReference Include="..\NebulaBus.Store.Sql\NebulaBus.Store.Sql.csproj" />
-    <ProjectReference Include="..\NebulaBus.Transport.Rabbitmq\NebulaBus.Transport.Rabbitmq.csproj" />
+    <ProjectReference Include="..\..\NebulaBus.Store.Sql\NebulaBus.Store.Sql.csproj" />
+    <ProjectReference Include="..\..\NebulaBus.Transport.Rabbitmq\NebulaBus.Transport.Rabbitmq.csproj" />
     <ProjectReference Include="..\WebApplication.Controllers\WebApplication.Controllers.csproj" />
   </ItemGroup>
 

@@ -19,8 +19,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\MessageLibrary\MessageLibrary.csproj" />
     <ProjectReference Include="..\NebulaBus\NebulaBus.csproj" />
+    <ProjectReference Include="..\Samples\MessageLibrary\MessageLibrary.csproj" />
   </ItemGroup>
 
   <ItemGroup>
