@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace NebulaBus.Store
+﻿namespace NebulaBus.Store
 {
     public class NebulaStoreMessage
     {

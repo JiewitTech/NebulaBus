@@ -27,6 +27,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LogicSamples", "LogicSample
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RabbitmqWithRedisStoreWebApiSample", "RabbitmqWithRedisStoreWebApiSample\RabbitmqWithRedisStoreWebApiSample.csproj", "{821FE282-43EE-480D-B395-547A8813EB25}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NebulaBus.Store.Sql", "NebulaBus.Store.Sql\NebulaBus.Store.Sql.csproj", "{4A4309BF-26C8-4BA6-9ADA-DD84FF8ADD61}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RabbitmqWithSqlStoreWebApiSample", "RabbitmqWithSqlStoreWebApiSample\RabbitmqWithSqlStoreWebApiSample.csproj", "{87A888DB-2E89-4205-B3A3-32F38CE946BF}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -77,6 +81,14 @@ Global
 		{821FE282-43EE-480D-B395-547A8813EB25}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{821FE282-43EE-480D-B395-547A8813EB25}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{821FE282-43EE-480D-B395-547A8813EB25}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4A4309BF-26C8-4BA6-9ADA-DD84FF8ADD61}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4A4309BF-26C8-4BA6-9ADA-DD84FF8ADD61}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4A4309BF-26C8-4BA6-9ADA-DD84FF8ADD61}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4A4309BF-26C8-4BA6-9ADA-DD84FF8ADD61}.Release|Any CPU.Build.0 = Release|Any CPU
+		{87A888DB-2E89-4205-B3A3-32F38CE946BF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{87A888DB-2E89-4205-B3A3-32F38CE946BF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{87A888DB-2E89-4205-B3A3-32F38CE946BF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{87A888DB-2E89-4205-B3A3-32F38CE946BF}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -87,6 +99,7 @@ Global
 		{9CC09AB1-0589-4A44-895F-4F0F7CD17E2E} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 		{43607D99-9A7F-4A8C-8539-07C1424022C7} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 		{821FE282-43EE-480D-B395-547A8813EB25} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{87A888DB-2E89-4205-B3A3-32F38CE946BF} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {855D751D-7811-4D9B-87C9-F628E17E3A56}

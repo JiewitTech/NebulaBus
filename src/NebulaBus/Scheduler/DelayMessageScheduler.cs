@@ -48,6 +48,8 @@ namespace NebulaBus.Scheduler
             timer.Elapsed += Timer_Elapsed;
             var lockValue = Guid.NewGuid().ToString();
 
+            _store.Init();
+
             cts.Token.Register(() =>
             {
                 _scheduler.Clear();

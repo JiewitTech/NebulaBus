@@ -12,6 +12,7 @@
 | ![NuGet Version](https://img.shields.io/nuget/v/NebulaBus?style=plastic&label=NebulaBus&color=blue&link=https%3A%2F%2Fwww.nuget.org%2Fpackages%2FNebulaBus%2F) | NebulaBus's Core |
 | ![NuGet Version](https://img.shields.io/nuget/v/NebulaBus.Store.Memory?style=plastic&label=NebulaBus.Store.Memory&color=blue&link=https%3A%2F%2Fwww.nuget.org%2Fpackages%2FNebulaBus.Store.Memory%2F) | NebulaBus Memory Store Provider |
 | ![NuGet Version](https://img.shields.io/nuget/v/NebulaBus.Store.Redis?style=plastic&label=NebulaBus.Store.Redis&color=blue&link=https%3A%2F%2Fwww.nuget.org%2Fpackages%2FNebulaBus.Store.Redis%2F) | NebulaBus Redis Store Provider |
+| ![NuGet Version](https://img.shields.io/nuget/v/NebulaBus.Store.Sql?style=plastic&label=NebulaBus.Store.Sql&color=blue&link=https%3A%2F%2Fwww.nuget.org%2Fpackages%2FNebulaBus.Store.Sql%2F) | NebulaBus Sql Store Provider |
 | ![NuGet Version](https://img.shields.io/nuget/v/NebulaBus.Transport.Memory?style=plastic&label=NebulaBus.Transport.Memory&color=blue&link=https%3A%2F%2Fwww.nuget.org%2Fpackages%2FNebulaBus.Transport.Memory%2F) | NebulaBus Memory Transport Provider |
 | ![NuGet Version](https://img.shields.io/nuget/v/NebulaBus.Transport.Rabbitmq?style=plastic&label=NebulaBus.Transport.Rabbitmq&color=blue&link=https%3A%2F%2Fwww.nuget.org%2Fpackages%2FNebulaBus.Transport.Rabbitmq%2F) | NebulaBus Rabbitmq Transport Provider |
 
@@ -37,8 +38,8 @@
 安装 
 https://www.nuget.org/packages/NebulaBus/ 
 ```
-dotnet add package NebulaBus
-
+dotnet add package NebulaBus.Store.Redis
+dotnet add package NebulaBus.Transport.Rabbitmq
 ```
 
 注入
@@ -48,7 +49,7 @@ builder.Services.AddNebulaBus(options =>
 {
     options.ClusterName = "TestCluster";
     options.UseRedisStore("localhost:6379,password=****,defaultDatabase=0,prefix=prefix_");
-    options.UseRabbitmq(rabbitmq =>
+    options.UseRabbitmqTransport(rabbitmq =>
     {
         rabbitmq.HostName = “localhost”;
         rabbitmq.UserName = “guest”;
