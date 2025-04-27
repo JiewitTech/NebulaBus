@@ -58,6 +58,7 @@ namespace NebulaBus.Scheduler
                 timer?.Dispose();
                 _store?.UnLock(lockValue);
                 _store?.Dispose();
+                _logger.LogInformation($"MessageScheduler Shutdown!");
             });
 
             while (!cts.IsCancellationRequested)
@@ -85,6 +86,8 @@ namespace NebulaBus.Scheduler
                 }
                 await Task.Delay(1000);
             }
+
+            _logger.LogInformation($"MessageScheduler Shutdown!");
         }
 
         private void Timer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
