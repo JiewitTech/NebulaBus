@@ -28,15 +28,17 @@ namespace NebulaBus.Scheduler
 
         public async Task Execute(IJobExecutionContext context)
         {
-            var messageId = context.JobDetail.JobDataMap.GetString("messageId");
-            var requestId = context.JobDetail.JobDataMap.GetString("requestId");
-            var name = context.JobDetail.JobDataMap.GetString("name");
+            context.JobDetail.JobDataMap.TryGetString("messageId", out var messageId);
+            context.JobDetail.JobDataMap.TryGetString("requestId", out var requestId);
+            context.JobDetail.JobDataMap.TryGetString("name", out var name);
             try
             {
-                var data = context.JobDetail.JobDataMap.GetString("data");
-                if (string.IsNullOrEmpty(data)) return;
-                var messageData = JsonSerializer.Deserialize<NebulaStoreMessage>(data, _serializerOptions);
+                var hasData = context.JobDetail.JobDataMap.TryGetString("data", out var data);
+                if (!hasData) return;
+
+                var messageData = JsonSerializer.Deserialize<NebulaStoreMessage>(data!, _serializerOptions);
                 if (messageData == null) return;
+
                 if (string.IsNullOrEmpty(messageData.Transport))
                 {
                     foreach (var processor in _processors)

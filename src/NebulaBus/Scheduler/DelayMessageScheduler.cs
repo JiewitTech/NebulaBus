@@ -39,8 +39,7 @@ namespace NebulaBus.Scheduler
         {
             var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
 
-            StdSchedulerFactory factory = new StdSchedulerFactory();
-            _scheduler = await factory.GetScheduler(cts.Token);
+            _scheduler = await SchedulerBuilder.Create(Guid.NewGuid().ToString(), "NebulaBusScheduler").BuildScheduler();
             _scheduler.JobFactory = _jobFactory;
             await _scheduler.Start(cts.Token);
 
@@ -98,7 +97,7 @@ namespace NebulaBus.Scheduler
         private IJobDetail BuildJobDetail(NebulaStoreMessage nebulaMessage)
         {
             var job = JobBuilder.Create<DelayMessageSendJob>()
-                .WithIdentity($"NebulaBusJob:{nebulaMessage.MessageId}.{nebulaMessage.Name}")
+                .WithIdentity($"NebulaBusJob:{nebulaMessage.GetKey()}")
                 .UsingJobData("data", JsonSerializer.Serialize(nebulaMessage, _serializerOptions))
                 .UsingJobData("messageId", nebulaMessage.MessageId)
                 .UsingJobData("name", nebulaMessage.Name)
@@ -123,7 +122,7 @@ namespace NebulaBus.Scheduler
                 if (delayMessage.TriggerTime < DateTimeOffset.Now.ToUnixTimeSeconds())
                 {
                     var rightNowTrigger = TriggerBuilder.Create()
-                        .WithIdentity($"NebulaBusTrigger:{delayMessage.MessageId}.{delayMessage.Name}")
+                        .WithIdentity($"NebulaBusTrigger:{delayMessage.GetKey()}")
                         .StartNow()
                         .Build();
                     await _scheduler.ScheduleJob(job, rightNowTrigger, cancellationToken);
@@ -131,7 +130,7 @@ namespace NebulaBus.Scheduler
                 }
 
                 var trigger = TriggerBuilder.Create()
-                    .WithIdentity($"NebulaBusTrigger:{delayMessage.MessageId}.{delayMessage.Name}")
+                    .WithIdentity($"NebulaBusTrigger:{delayMessage.GetKey()}")
                     .StartAt(DateTimeOffset.FromUnixTimeSeconds(delayMessage.TriggerTime))
                     .Build();
                 await _scheduler.ScheduleJob(job, trigger, cancellationToken);
