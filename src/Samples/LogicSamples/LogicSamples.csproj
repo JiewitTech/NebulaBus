@@ -7,8 +7,8 @@
     </PropertyGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\..\NebulaBus\NebulaBus.csproj" />
       <ProjectReference Include="..\MessageLibrary\MessageLibrary.csproj" />
-      <ProjectReference Include="..\NebulaBus\NebulaBus.csproj" />
     </ItemGroup>
 
 </Project>
