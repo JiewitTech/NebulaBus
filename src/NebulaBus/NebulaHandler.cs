@@ -66,7 +66,7 @@ namespace NebulaBus
             {
                 var exp = new Exception($"DeSerializer message failed", exception);
                 await NebulaExtension.ExcuteHandlerWithoutException(() => FallBackHandle(data, header, exp),
-                    () => filter?.FallBackHandle(data, header, exp));
+                    () => filter?.FallBackHandle(data, header, exp) ?? Task.CompletedTask);
                 return;
             }
 
@@ -74,7 +74,7 @@ namespace NebulaBus
             {
                 var exp = new Exception($"message is null or empty");
                 await NebulaExtension.ExcuteHandlerWithoutException(() => FallBackHandle(data, header, exp),
-                    () => filter?.FallBackHandle(data, header, exp));
+                    () => filter?.FallBackHandle(data, header, exp) ?? Task.CompletedTask);
                 return;
             }
 
@@ -88,7 +88,7 @@ namespace NebulaBus
                     return;
 
                 var res = await NebulaExtension.ExcuteBeforeHandlerWithoutException(() => BeforeHandle(data, header),
-                    () => filter?.BeforeHandle(data, header));
+                    () => filter?.BeforeHandle(data, header) ?? Task.FromResult(true));
                 if (!res) return;
                 //首次执行若发生异常直接重试三次
                 if (retryCount == 0)
@@ -108,7 +108,7 @@ namespace NebulaBus
                 if (MaxRetryCount == 0)
                 {
                     await NebulaExtension.ExcuteHandlerWithoutException(() => FallBackHandle(data, header, ex),
-                        () => filter?.FallBackHandle(data, header, ex));
+                        () => filter?.FallBackHandle(data, header, ex) ?? Task.CompletedTask);
                     return;
                 }
 
@@ -134,7 +134,7 @@ namespace NebulaBus
                 if (retryCount >= MaxRetryCount)
                 {
                     await NebulaExtension.ExcuteHandlerWithoutException(() => FallBackHandle(data, header, ex),
-                        () => filter?.FallBackHandle(data, header, ex));
+                        () => filter?.FallBackHandle(data, header, ex) ?? Task.CompletedTask);
                     return;
                 }
 
@@ -153,7 +153,7 @@ namespace NebulaBus
             finally
             {
                 await NebulaExtension.ExcuteHandlerWithoutException(() => AfterHandle(data, header),
-                    () => filter?.AfterHandle(data, header));
+                    () => filter?.AfterHandle(data, header) ?? Task.CompletedTask);
             }
         }
 

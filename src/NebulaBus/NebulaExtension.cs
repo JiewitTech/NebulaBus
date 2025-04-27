@@ -5,22 +5,22 @@ namespace NebulaBus
 {
     internal static class NebulaExtension
     {
-        public static async Task ExcuteWithoutException(Func<Task?> action)
+        public static async Task ExcuteWithoutException(Func<Task> action)
         {
             try
             {
-                await action?.Invoke();
+                await action().ConfigureAwait(false);
             }
             catch
             {
             }
         }
 
-        public static async Task ExcuteHandlerWithoutException(Func<Task> action, Func<Task?> action2)
+        public static async Task ExcuteHandlerWithoutException(Func<Task> action, Func<Task> action2)
         {
             try
             {
-                await action();
+                await action().ConfigureAwait(false);
             }
             catch (NotImplementedException)
             {
@@ -38,19 +38,19 @@ namespace NebulaBus
         {
             try
             {
-                return await action();
+                return await action().ConfigureAwait(false);
             }
             catch
             {
                 return true;
             }
         }
-        
+
         public static async Task<bool> ExcuteBeforeHandlerWithoutException(Func<Task<bool>> action, Func<Task<bool>> action2)
         {
             try
             {
-                return await action();
+                return await action().ConfigureAwait(false);
             }
             catch (NotImplementedException)
             {
