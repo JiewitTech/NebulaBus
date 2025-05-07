@@ -2,22 +2,22 @@
 
 namespace NebulaBus.Transport.Kafka
 {
-    internal class KafkaProcessor : IProcessor
+    internal class KafkaTransport : ITransport
     {
         public string Name => "kafka";
 
         private readonly NebulaKafkaOptions _kafkaOptions;
-        private readonly ILogger<KafkaProcessor> _logger;
+        private readonly ILogger<KafkaTransport> _logger;
         private readonly IServiceProvider _serviceProvider;
         private bool _started;
         private readonly NebulaOptions _nebulaOptions;
         private CancellationToken _originalCancellationToken;
 
-        public KafkaProcessor(
+        public KafkaTransport(
             IServiceProvider serviceProvider,
             NebulaKafkaOptions nebulaRabbitmqOptions,
             NebulaOptions nebulaOptions,
-            ILogger<KafkaProcessor> logger)
+            ILogger<KafkaTransport> logger)
         {
             _serviceProvider = serviceProvider;
             _nebulaOptions = nebulaOptions;

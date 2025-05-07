@@ -11,13 +11,13 @@ namespace NebulaBus
 {
     internal class NebulaBusService : INebulaBus
     {
-        private readonly IEnumerable<IProcessor> _processors;
+        private readonly IEnumerable<ITransport> _processors;
         private readonly IDelayMessageScheduler _delayMessageScheduler;
         private readonly IdWorker _idWorker;
 
         public NebulaBusService(IServiceProvider serviceProvider)
         {
-            _processors = serviceProvider.GetRequiredService<IEnumerable<IProcessor>>();
+            _processors = serviceProvider.GetRequiredService<IEnumerable<ITransport>>();
             _delayMessageScheduler = serviceProvider.GetRequiredService<IDelayMessageScheduler>();
             if (!long.TryParse(Environment.GetEnvironmentVariable("NEBULABUS_WORKERID"), out var result))
                 result = 1;

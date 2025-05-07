@@ -21,7 +21,7 @@ namespace NebulaBus.Transport.Rabbitmq
             services.AddSingleton(rabbitmqOptions);
 
             //Processor
-            services.TryAddEnumerable(ServiceDescriptor.Singleton<IProcessor, RabbitmqProcessor>());
+            services.TryAddEnumerable(ServiceDescriptor.Singleton<ITransport, RabbitmqTransport>());
 
             //Rabbitmq
             services.AddSingleton<IRabbitmqChannelPool, RabbitmqChannelPool>();
