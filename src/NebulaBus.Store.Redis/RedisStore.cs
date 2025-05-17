@@ -17,18 +17,20 @@ namespace NebulaBus.Store.Redis
         private readonly NebulaOptions _nebulaOptions;
         private RedisClient.LockController _redisClientLock;
         private readonly ILogger<RedisStore> _logger;
+        private bool _disposed;
 
         public RedisStore(IServiceProvider provider, NebulaOptions nebulaOptions, ILogger<RedisStore> logger)
         {
             _redisClient = provider.GetKeyedService<RedisClient>("NebulaBusRedis")!;
             _nebulaOptions = nebulaOptions;
             _logger = logger;
+            _disposed = false;
         }
 
         public void Add(NebulaStoreMessage nebulaStoreMessage)
         {
             using var tran = _redisClient.Multi();
-            tran.ZAdd(IndexRedisKey, nebulaStoreMessage.TriggerTime,nebulaStoreMessage.GetKey());
+            tran.ZAdd(IndexRedisKey, nebulaStoreMessage.TriggerTime, nebulaStoreMessage.GetKey());
             tran.HSet(RedisKey, nebulaStoreMessage.GetKey(),
                 nebulaStoreMessage);
             tran.Exec();
@@ -69,6 +71,7 @@ namespace NebulaBus.Store.Redis
 
         public bool Lock(string value)
         {
+            if (_disposed) return false;
             var val = _redisClient.Get<string>(LockKey);
             if (val == value) return true;
             return _redisClient.SetNx(LockKey, value, 3);
@@ -81,15 +84,22 @@ namespace NebulaBus.Store.Redis
 
         public void UnLock(string value)
         {
-            var val = _redisClient.Get<string>(LockKey);
-            if (val == value)
-                _redisClient.Del(LockKey);
+            try
+            {
+                if (_disposed) return;
+                var val = _redisClient.Get<string>(LockKey);
+                if (val == value)
+                    _redisClient.Del(LockKey);
+            }
+            catch { }
         }
 
         public void Dispose()
         {
+            if (_disposed) return;
             try
             {
+                _disposed = true;
                 _redisClient?.Dispose();
                 _redisClientLock?.Dispose();
             }
