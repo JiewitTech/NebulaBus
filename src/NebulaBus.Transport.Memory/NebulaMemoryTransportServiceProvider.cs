@@ -8,7 +8,7 @@ namespace NebulaBus.Transport.Memory
         public void ProvideServices(IServiceCollection services, NebulaOptions options)
         {
             //Processor
-            services.TryAddEnumerable(ServiceDescriptor.Singleton<IProcessor, MemoryProcessor>());
+            services.TryAddEnumerable(ServiceDescriptor.Singleton<ITransport, MemoryTransport>());
         }
     }
 }

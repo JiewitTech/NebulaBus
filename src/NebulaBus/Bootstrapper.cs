@@ -27,7 +27,7 @@ namespace NebulaBus
                 return;
             _cts = CancellationTokenSource.CreateLinkedTokenSource(stoppingToken);
 
-            var _processors = _serviceProvider.GetServices<IProcessor>();
+            var _processors = _serviceProvider.GetServices<ITransport>();
             var _delayMessageScheduler = _serviceProvider.GetService<IDelayMessageScheduler>();
 
             //If cancelled, dispose of all processors

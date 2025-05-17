@@ -10,11 +10,11 @@ using System.Threading.Tasks;
 
 namespace NebulaBus.Transport.Rabbitmq
 {
-    internal class RabbitmqProcessor : IProcessor
+    internal class RabbitmqTransport : ITransport
     {
         private readonly NebulaRabbitmqOptions _rabbitmqOptions;
         private readonly List<IChannel> _channels;
-        private readonly ILogger<RabbitmqProcessor> _logger;
+        private readonly ILogger<RabbitmqTransport> _logger;
         private readonly IServiceProvider _serviceProvider;
         private bool _started;
         private readonly NebulaOptions _nebulaOptions;
@@ -23,12 +23,12 @@ namespace NebulaBus.Transport.Rabbitmq
 
         public string Name => "Rabbitmq";
 
-        public RabbitmqProcessor(
+        public RabbitmqTransport(
             IServiceProvider serviceProvider,
             IRabbitmqChannelPool rabbitmqChannelPool,
             NebulaRabbitmqOptions nebulaRabbitmqOptions,
             NebulaOptions nebulaOptions,
-            ILogger<RabbitmqProcessor> logger)
+            ILogger<RabbitmqTransport> logger)
         {
             _serviceProvider = serviceProvider;
             _nebulaOptions = nebulaOptions;

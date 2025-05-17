@@ -10,15 +10,15 @@ using Microsoft.Extensions.Logging;
 
 namespace NebulaBus.Transport.Memory
 {
-    internal class MemoryProcessor : IProcessor
+    internal class MemoryTransport : ITransport
     {
         public string Name => "Memory";
         private readonly NebulaOptions _nebulaOptions;
         private readonly IServiceProvider _serviceProvider;
         private readonly ConcurrentBag<ChannelInfo> _channelInfos;
-        private readonly ILogger<MemoryProcessor> _logger;
+        private readonly ILogger<MemoryTransport> _logger;
 
-        public MemoryProcessor(IServiceProvider serviceProvider, ILogger<MemoryProcessor> logger)
+        public MemoryTransport(IServiceProvider serviceProvider, ILogger<MemoryTransport> logger)
         {
             _serviceProvider = serviceProvider;
             _nebulaOptions = serviceProvider.GetRequiredService<NebulaOptions>();

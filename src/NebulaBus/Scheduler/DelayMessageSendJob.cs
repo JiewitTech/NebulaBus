@@ -12,11 +12,11 @@ namespace NebulaBus.Scheduler
     internal class DelayMessageSendJob : IJob
     {
         private readonly IStore _store;
-        private readonly IEnumerable<IProcessor> _processors;
+        private readonly IEnumerable<ITransport> _processors;
         private readonly ILogger<DelayMessageSendJob> _logger;
         private readonly JsonSerializerOptions _serializerOptions;
 
-        public DelayMessageSendJob(IStore store, IEnumerable<IProcessor> processors,
+        public DelayMessageSendJob(IStore store, IEnumerable<ITransport> processors,
             NebulaOptions nebulaOptions,
             ILogger<DelayMessageSendJob> logger)
         {
